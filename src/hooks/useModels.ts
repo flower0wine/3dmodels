@@ -1,0 +1,33 @@
+import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
+import { fetchModels, fetchModelById, getModelFileUrl } from "@/api/models";
+
+// 获取模型列表的Hooks
+export function useModelsInfinite(initialLimit = 20) {
+  return useInfiniteQuery({
+    queryKey: ["models"],
+    queryFn: ({ pageParam }) => fetchModels(pageParam, initialLimit),
+    initialPageParam: undefined as string | undefined,
+    getNextPageParam: (lastPage) => lastPage.nextCursor,
+    staleTime: 1000 * 60 * 5, // 5分钟
+  });
+}
+
+// 获取单个模型的Hooks
+export function useModel(id: string) {
+  return useQuery({
+    queryKey: ["model", id],
+    queryFn: () => fetchModelById(id),
+    enabled: !!id,
+    staleTime: 1000 * 60 * 10, // 10分钟
+  });
+}
+
+// 获取模型文件URL的Hooks
+export function useModelFileUrl(key: string | null) {
+  return useQuery({
+    queryKey: ["modelFileUrl", key],
+    queryFn: () => getModelFileUrl(key!),
+    enabled: !!key,
+    staleTime: 1000 * 60 * 60, // 1小时
+  });
+} 

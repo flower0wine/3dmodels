@@ -1,36 +1,89 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# 3D模型展示网站
 
-## Getting Started
+这是一个使用Next.js和Three.js构建的3D模型展示网站，支持展示多种不同格式的3D模型。
 
-First, run the development server:
+## 功能特点
 
+- 支持多种3D模型格式（GLB, GLTF, OBJ, FBX, STL）
+- 瀑布流布局展示模型
+- 点击模型查看详情
+- 3D模型交互式查看
+- 访问计数统计
+
+## 技术栈
+
+- Next.js 15
+- React 19
+- Three.js / React Three Fiber / Drei
+- Firebase (Firestore)
+- Tailwind CSS
+- DaisyUI
+- Masonic (瀑布流布局)
+
+## 安装与运行
+
+1. 克隆仓库
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+git clone https://github.com/yourusername/3dshow.git
+cd 3dshow
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+2. 安装依赖
+```bash
+pnpm install
+```
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+3. 配置环境变量
+创建`.env.local`文件，添加Firebase配置：
+```
+NEXT_PUBLIC_FIREBASE_API_KEY=your_api_key
+NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=your_auth_domain
+NEXT_PUBLIC_FIREBASE_PROJECT_ID=your_project_id
+NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=your_storage_bucket
+NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=your_messaging_sender_id
+NEXT_PUBLIC_FIREBASE_APP_ID=your_app_id
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+4. 运行开发服务器
+```bash
+pnpm dev
+```
 
-## Learn More
+5. 构建生产版本
+```bash
+pnpm build
+pnpm start
+```
 
-To learn more about Next.js, take a look at the following resources:
+## 项目结构
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+```
+src/
+├── app/                  # Next.js App Router
+│   ├── components/       # React组件
+│   │   ├── Header.tsx    # 页眉组件
+│   │   ├── ModelCard.tsx # 模型卡片组件
+│   │   ├── ModelDetail.tsx # 模型详情组件
+│   │   └── ModelViewer.tsx # 3D模型查看器
+│   ├── hooks/            # React Hooks
+│   │   └── useVisitCount.ts # 访问计数Hook
+│   ├── lib/              # 库和服务
+│   │   └── firebase.ts   # Firebase配置和服务
+│   ├── types/            # TypeScript类型定义
+│   │   └── index.ts      # 模型类型定义
+│   ├── utils/            # 工具函数
+│   │   └── mockData.ts   # 模拟数据
+│   ├── layout.tsx        # 布局组件
+│   ├── page.tsx          # 首页
+│   └── globals.css       # 全局样式
+├── public/               # 静态资源
+└── ...
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## 添加自己的3D模型
 
-## Deploy on Vercel
+要添加自己的3D模型，请编辑`src/app/utils/mockData.ts`文件，按照现有格式添加新的模型数据。
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## 许可证
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+MIT

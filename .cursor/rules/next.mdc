@@ -1,0 +1,66 @@
+---
+description: Project Rules，Write better code and build beautiful UIs.
+globs: 
+alwaysApply: false
+---
+You are an expert in Web Development using the ShipFast boilerplate stack: JavaScript, Node.js, React, Next.js App Router, Axios, React Query, Tailwind CSS, Framer Motion, Shadcn UI, Magic UI, Aceternity UI, Reactbits UI, Material-UI,NextAuth, Backblaze, Supabase.
+
+Code Style and Structure
+- Write concise, technical JavaScript code with accurate examples.
+- Use functional and declarative programming patterns; avoid classes.
+- Prefer iteration and modularization over code duplication.
+- Use descriptive variable names with auxiliary verbs (e.g., isLoading, hasError).
+- Structure files: exported component, subcomponents, helpers, static content.
+- Use @/* to import component.
+
+Naming Conventions
+- Use kebab-case for directories.
+- Use camelCase for variables and functions.
+- Use PascalCase for components.
+- File names for components should be in PascalCase. Rest of the files in kebab-case.
+- Prefix component names with their type (e.g. ButtonAccount.jsx and ButtonSignin.jsx, CardAnalyticsMain jsx and CardAnalyticsData.jsx, etc.)
+
+Syntax and Formatting
+- Use the "function" keyword for pure functions.
+- Avoid unnecessary curly braces in conditionals; use concise syntax for simple statements.
+- Use declarative JSX.
+
+Ul and Styling
+- Use Tremor as a data visualization tool.
+- Use Shadcn UI, Magic UI, Aceternity UI, Reactbits UI and Tailwind CSS for components and styling.
+- Implement responsive design with Tailwind CSS; use a mobile-first approach.
+- Use Frame Motion to implement smooth and exquisite animations. Pay attention to avoiding common bugs when using Frame Motion for animations, such as the issue of transform being overwritten.
+
+Performance Optimization
+- Use Suspense to make the page load more smoothly, allowing the page to load piece by piece instead of loading and rendering all at once.
+- Minimize 'use client', 'useState', and 'useEffect'; favor React Server Components (RSC).
+- Wrap client components in Suspense with fallback.
+- Use dynamic loading for non-critical components.
+- Optimize images: use Webp format, include size data, implement lazy loading.
+- Write maintainable and highly scalable modules or components.
+- In Nextjs, try to use server components instead of client components.
+- Write high-performance code, and use hooks such as useCallback, useMemo, useTransition, useDeferredValue, etc. to optimize the performance of components when appropriate.
+- Use efficient data structures to make the code perform more powerfully.
+- When writing code, confirm whether there are better and more efficient ways of writing.
+
+In the Project directory:
+- Components should be placed under the components directory. Follow the common conventions in Next.js projects for organizing components. For example, UI components, layout components, provider components, etc., should be placed in their respective folders.
+- Use zod for all validation.
+- Define return types with zod schemas.
+- Export types generated from schemas.
+- All API requests should be placed under the unified "api" directory. Create different files to save requests according to different categories, and export the request functions in those files.
+- All utility functions should be placed in the "utils" directory. Create different files to save these functions according to the functions of the utilities.
+- All TypeScript types should be placed under the types directory.
+
+Key Conventions
+- Use Axios to send requests, and leverage React Query to build more powerful request functionalities.
+- Use TypeScript to write professional and standardized type checking for the project, and avoid using "any", "unknown", and "never".
+- Optimize Web Vitals (LCP, CLS, FID).
+- Limit 'use client';
+- Fetch logs from the console.
+- Favor server components and Next.js SSR.
+- Use only for Web API access in small components.
+- Avoid for data fetching or state management.
+- Analyzing README.md.
+- Generating markdown documentation.
+- Extracting code comments
