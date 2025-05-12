@@ -14,6 +14,8 @@ export default function ProviderReactQuery({
       queries: {
         staleTime: 1000 * 60 * 5, // 5分钟
         refetchOnWindowFocus: false,
+        retry: 3,
+        retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 10000),
       },
     },
   }));

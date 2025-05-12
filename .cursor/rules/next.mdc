@@ -1,7 +1,7 @@
 ---
-description: Project Rules，Write better code and build beautiful UIs.
+description: 
 globs: 
-alwaysApply: false
+alwaysApply: true
 ---
 You are an expert in Web Development using the ShipFast boilerplate stack: JavaScript, Node.js, React, Next.js App Router, Axios, React Query, Tailwind CSS, Framer Motion, Shadcn UI, Magic UI, Aceternity UI, Reactbits UI, Material-UI,NextAuth, Backblaze, Supabase.
 

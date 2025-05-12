@@ -18,19 +18,21 @@ export default async function HomePage() {
   });
   
   return (
-    <main className="min-h-screen py-8 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-7xl mx-auto">
-        <LayoutPageHeader 
-          title="3D模型展示"
-          description="探索高质量的3D模型集合，支持多种格式的模型预览"
-        />
-        
-        <HydrationBoundary state={dehydrate(queryClient)}>
-          <Suspense fallback={<SkeletonGrid />}>
-            <GridModelMasonry />
-          </Suspense>
-        </HydrationBoundary>
-      </div>
-    </main>
+    <>
+      <main className="min-h-screen py-8 px-4 sm:px-6 lg:px-8">
+        <div className="max-w-7xl mx-auto">
+          <LayoutPageHeader 
+            title="3D模型展示"
+            description="探索高质量的3D模型集合，支持多种格式的模型预览"
+          />
+          
+          <HydrationBoundary state={dehydrate(queryClient)}>
+            <Suspense fallback={<SkeletonGrid />}>
+              <GridModelMasonry />
+            </Suspense>
+          </HydrationBoundary>
+        </div>
+      </main>
+    </>
   );
 }

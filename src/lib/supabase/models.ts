@@ -1,14 +1,5 @@
-import { createClient } from "@supabase/supabase-js";
-import { Model } from "./types";
-
-if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
-  throw new Error("缺少Supabase环境变量");
-}
-
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-
-export const supabase = createClient(supabaseUrl, supabaseKey);
+import { Model } from "@/types/model";
+import { supabase } from "@/lib/supabase/client";
 
 export async function getModels(cursor?: string, limit = 10): Promise<{ models: Model[]; nextCursor: string | null }> {
   let query = supabase

@@ -1,12 +1,13 @@
 import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
 import { fetchModels, fetchModelById, getModelFileUrl } from "@/api/models";
+import { ModelsResponse } from "@/types/model";
 
 // 获取模型列表的Hooks
 export function useModelsInfinite(initialLimit = 20) {
-  return useInfiniteQuery({
+  return useInfiniteQuery<ModelsResponse>({
     queryKey: ["models"],
-    queryFn: ({ pageParam }) => fetchModels(pageParam, initialLimit),
-    initialPageParam: undefined as string | undefined,
+    queryFn: ({ pageParam }) => fetchModels(pageParam as string | undefined, initialLimit),
+    initialPageParam: undefined,
     getNextPageParam: (lastPage) => lastPage.nextCursor,
     staleTime: 1000 * 60 * 5, // 5分钟
   });

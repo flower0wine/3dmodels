@@ -5,15 +5,16 @@ export const modelSchema = z.object({
   id: z.string().uuid(),
   name: z.string(),
   description: z.string().optional(),
-  thumbnail_url: z.string().url(),
-  model_url: z.string(),
-  category: z.string(),
-  created_at: z.string().datetime(),
-  author: z.string(),
-  file_format: z.string(), // glb, gltf, obj等
-  polygon_count: z.number().int().positive(),
-  file_size: z.number().positive()
-});
+  thumbnail_path: z.string().url(),
+  storage_path: z.string().url(),
+  category: z.string().optional(),
+  created_at: z.string().or(z.date()),
+  updated_at: z.string().or(z.date()),
+  author: z.string().optional(),
+  format: z.string(),
+  polygon_count: z.number().optional(),
+  file_size: z.number().optional()
+}).passthrough();
 
 // 响应验证schema
 export const modelsResponseSchema = z.object({

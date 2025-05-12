@@ -20,7 +20,7 @@ export default function CardModel({ model }: CardModelProps) {
       >
         <div className="relative h-48 w-full">
           <Image
-            src={model.thumbnail_url}
+            src={model.thumbnail_path}
             alt={model.name}
             fill
             className="object-cover"
@@ -32,8 +32,8 @@ export default function CardModel({ model }: CardModelProps) {
           <h3 className="text-lg font-semibold truncate">{model.name}</h3>
           <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">作者: {model.author}</p>
           <div className="flex justify-between mt-2 text-xs text-gray-500 dark:text-gray-400">
-            <span>{model.file_format.toUpperCase()}</span>
-            <span>{Math.round(model.file_size / 1024)} KB</span>
+            <span>{model.format.toUpperCase()}</span>
+            {/* <span>{Math.round(model.file_size / 1024)} KB</span> */}
           </div>
         </div>
       </div>
