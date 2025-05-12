@@ -15,9 +15,9 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import { Checkbox } from "@/components/ui/checkbox";
-import { register, sendOtpLogin } from "@/api/auth";
-import { AnimatedAlert, AnimatedSuccessMessage } from "@/components/ui/animated-alert";
+import { register, sendOtpLogin, verifyOtp } from "@/api/auth";
+import { AnimatedAlert, AnimatedSuccessMessage } from "@/components/ui/motion";
+import { ButtonLoadingSpinner } from "@/components/ui/loading";
 
 // 验证Schema
 const registerSchema = z.object({
@@ -29,9 +29,7 @@ const registerSchema = z.object({
     .regex(/[A-Z]/, { message: "密码必须包含至少一个大写字母" })
     .regex(/[0-9]/, { message: "密码必须包含至少一个数字" }),
   confirmPassword: z.string(),
-  terms: z.boolean().refine(val => val === true, { 
-    message: "您必须同意条款和条件才能继续" 
-  }),
+  verificationCode: z.string().min(6, { message: "请输入6位验证码" }).max(6),
 }).refine(data => data.password === data.confirmPassword, {
   message: "密码不匹配",
   path: ["confirmPassword"],
@@ -44,7 +42,7 @@ export default function FormRegister() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isVerificationSent, setIsVerificationSent] = useState(false);
-  const [registeredEmail, setRegisteredEmail] = useState("");
+  const [isVerificationSuccess, setIsVerificationSuccess] = useState(false);
 
   // 注册表单
   const form = useForm<RegisterFormValues>({
@@ -53,45 +51,26 @@ export default function FormRegister() {
       email: "",
       password: "",
       confirmPassword: "",
-      terms: false,
+      verificationCode: "",
     },
   });
 
-  // 处理注册提交
-  const onSubmit = async (data: RegisterFormValues) => {
-    setIsLoading(true);
-    setError(null);
-    
-    try {
-      // 使用API服务进行注册
-      await register(data.email, data.password);
-      
-      setIsVerificationSent(true);
-      setRegisteredEmail(data.email);
-    } catch (err: any) {
-      setError(err.response?.data?.error || "注册失败，请稍后再试");
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  // 处理OTP验证码登录
-  const handleOtpLogin = async () => {
+  // 处理发送验证码
+  const handleSendVerificationCode = async () => {
     const email = form.getValues("email");
-    
+
     if (!email || !z.string().email().safeParse(email).success) {
       form.setError("email", { message: "请先输入有效的电子邮箱" });
       return;
     }
-    
+
     setIsLoading(true);
     setError(null);
-    
+
     try {
       await sendOtpLogin(email, true);
       
       setIsVerificationSent(true);
-      setRegisteredEmail(email);
     } catch (err: any) {
       setError(err.response?.data?.error || "发送验证码失败，请稍后再试");
     } finally {
@@ -99,32 +78,48 @@ export default function FormRegister() {
     }
   };
 
-  if (isVerificationSent) {
+  // 处理注册提交
+  const onSubmit = async (data: RegisterFormValues) => {
+    setIsLoading(true);
+    setError(null);
+    
+    try {
+      // 首先验证验证码
+      await verifyOtp(data.email, data.verificationCode);
+      
+      // 验证码正确后进行注册
+      await register(data.email, data.password);
+      
+      setIsVerificationSuccess(true);
+      
+      // 注册成功后自动跳转到首页
+      setTimeout(() => {
+        router.refresh();
+        router.push("/");
+      }, 2000);
+    } catch (err: any) {
+      setError(err.response?.data?.error || "注册失败，请稍后再试");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  if (isVerificationSuccess) {
     return (
       <div className="text-center">
         <AnimatedSuccessMessage
           show={true}
-          title="验证邮件已发送"
-          description={`我们已向 ${registeredEmail} 发送了一封验证邮件。请查收并点击邮件中的链接以完成注册。`}
+          title="注册成功！"
+          description="您已成功注册并验证邮箱，正在为您跳转到首页..."
         />
-        <Button 
-          variant="outline" 
-          onClick={() => setIsVerificationSent(false)}
-          className="mt-2"
-        >
-          返回注册
-        </Button>
       </div>
     );
   }
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-        <AnimatedAlert 
-          show={!!error} 
-          variant="destructive"
-        >
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+        <AnimatedAlert show={!!error} variant="destructive">
           {error}
         </AnimatedAlert>
 
@@ -135,98 +130,97 @@ export default function FormRegister() {
             <FormItem>
               <FormLabel>电子邮箱</FormLabel>
               <FormControl>
-                <Input 
-                  placeholder="your@email.com" 
-                  {...field} 
-                  disabled={isLoading}
-                />
+                <div className="flex space-x-2">
+                  <Input
+                    placeholder="your@email.com"
+                    {...field}
+                    disabled={isLoading || isVerificationSent}
+                    className="flex-1"
+                  />
+                  <Button 
+                    type="button" 
+                    variant="outline" 
+                    onClick={handleSendVerificationCode}
+                    disabled={isLoading || isVerificationSent}
+                  >
+                    {isVerificationSent ? "已发送" : "发送验证码"}
+                  </Button>
+                </div>
               </FormControl>
               <FormMessage />
             </FormItem>
           )}
         />
 
-        <div className="grid gap-4 sm:grid-cols-2">
-          <FormField
-            control={form.control}
-            name="password"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>密码</FormLabel>
-                <FormControl>
-                  <Input 
-                    type="password" 
-                    placeholder="••••••••" 
-                    {...field} 
-                    disabled={isLoading}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name="confirmPassword"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>确认密码</FormLabel>
-                <FormControl>
-                  <Input 
-                    type="password" 
-                    placeholder="••••••••" 
-                    {...field} 
-                    disabled={isLoading}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-        </div>
-        
         <FormField
           control={form.control}
-          name="terms"
+          name="verificationCode"
           render={({ field }) => (
-            <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md p-2">
+            <FormItem>
+              <FormLabel>验证码</FormLabel>
               <FormControl>
-                <Checkbox
-                  checked={field.value}
-                  onCheckedChange={field.onChange}
-                  disabled={isLoading}
+                <Input
+                  placeholder="输入6位验证码"
+                  {...field}
+                  disabled={isLoading || !isVerificationSent}
                 />
               </FormControl>
-              <div className="space-y-1 leading-none">
-                <FormLabel className="text-sm font-normal">
-                  我同意服务条款和隐私政策
-                </FormLabel>
-              </div>
               <FormMessage />
             </FormItem>
           )}
         />
 
-        <div className="flex items-center justify-center">
-          <Button
-            type="button"
-            variant="link"
-            size="sm"
-            className="font-normal"
-            onClick={handleOtpLogin}
-            disabled={isLoading}
-          >
-            使用邮箱验证码注册
-          </Button>
-        </div>
+        <FormField
+          control={form.control}
+          name="password"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>密码</FormLabel>
+              <FormControl>
+                <Input
+                  type="password"
+                  placeholder="请输入密码"
+                  {...field}
+                  disabled={isLoading}
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <FormField
+          control={form.control}
+          name="confirmPassword"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>确认密码</FormLabel>
+              <FormControl>
+                <Input
+                  type="password"
+                  placeholder="请输入确认密码"
+                  {...field}
+                  disabled={isLoading}
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
 
         <Button 
           type="submit" 
           className="w-full" 
-          disabled={isLoading}
+          disabled={isLoading || !isVerificationSent}
         >
-          {isLoading ? "注册中..." : "注册账户"}
+          {isLoading ? (
+            <>
+              <ButtonLoadingSpinner className="mr-2" />
+              注册中...
+            </>
+          ) : (
+            "注册账户"
+          )}
         </Button>
       </form>
     </Form>

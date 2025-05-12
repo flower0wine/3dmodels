@@ -1,36 +1,48 @@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Suspense } from "react";
 import FormLogin from "@/components/auth/FormLogin";
 import FormRegister from "@/components/auth/FormRegister";
-import { AnimatedContainer, AnimatedHeading, AnimatedText, ScaleAnimatedContainer } from "@/components/ui/animated-container";
+import { FadeUp, FadeScale, MotionH2, MotionP } from "@/components/ui/motion";
+import { FormLoadingSpinner } from "@/components/ui/loading";
 
 export default function AuthPage() {
   return (
     <div className="flex min-h-screen items-center justify-center py-12 px-4 sm:px-6 lg:px-8 bg-gradient-to-br from-indigo-50 via-white to-purple-50">
-      <AnimatedContainer className="w-full max-w-md space-y-8">
+      <FadeUp className="w-full max-w-md space-y-8">
         <div className="text-center">
-          <AnimatedHeading 
+          <MotionH2
             className="mt-6 text-3xl font-bold tracking-tight text-gray-900"
-            delay={0.2}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.5, delay: 0.2 }}
           >
             欢迎使用3D模型平台
-          </AnimatedHeading>
-          <AnimatedText 
+          </MotionH2>
+          <MotionP
             className="mt-2 text-sm text-gray-600"
-            delay={0.3}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.5, delay: 0.3 }}
           >
             登录或注册以开始探索和分享3D创作
-          </AnimatedText>
+          </MotionP>
         </div>
 
-        <ScaleAnimatedContainer delay={0.4}>
+        <FadeScale transition={{ duration: 0.5, delay: 0.4 }}>
           <Tabs defaultValue="login" className="w-full">
             <TabsList className="grid w-full grid-cols-2 mb-6">
               <TabsTrigger value="login">登录</TabsTrigger>
               <TabsTrigger value="register">注册</TabsTrigger>
             </TabsList>
-            
+
             <TabsContent value="login">
               <Card>
                 <CardHeader>
@@ -40,7 +52,7 @@ export default function AuthPage() {
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <Suspense fallback={<div>加载中...</div>}>
+                  <Suspense fallback={<FormLoadingSpinner />}>
                     <FormLogin />
                   </Suspense>
                 </CardContent>
@@ -49,7 +61,7 @@ export default function AuthPage() {
                 </CardFooter>
               </Card>
             </TabsContent>
-            
+
             <TabsContent value="register">
               <Card>
                 <CardHeader>
@@ -59,7 +71,7 @@ export default function AuthPage() {
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <Suspense fallback={<div>加载中...</div>}>
+                  <Suspense fallback={<FormLoadingSpinner />}>
                     <FormRegister />
                   </Suspense>
                 </CardContent>
@@ -69,8 +81,8 @@ export default function AuthPage() {
               </Card>
             </TabsContent>
           </Tabs>
-        </ScaleAnimatedContainer>
-      </AnimatedContainer>
+        </FadeScale>
+      </FadeUp>
     </div>
   );
-} 
+}

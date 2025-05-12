@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getModels } from "@/lib/supabase";
+import { getModels } from "@/lib/supabase/models";
 import { modelsResponseSchema } from "@/types/model"; 
 
 export async function GET(request: NextRequest) {

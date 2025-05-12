@@ -1,8 +1,8 @@
-import { supabase } from '@/lib/supabase/client';
+import { signUp } from '@/lib/supabase/auth';
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 
-const registerSchema = z.object({
+export const registerSchema = z.object({
   email: z.string().email({ message: "请输入有效的电子邮箱地址" }),
   password: z
     .string()
@@ -27,15 +27,10 @@ export async function POST(request: NextRequest) {
     
     const { email, password } = validationResult.data;
     const origin = request.headers.get('origin') || request.nextUrl.origin;
+    const redirectTo = `${origin}/auth/callback`;
     
     // 进行注册
-    const { data, error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        emailRedirectTo: `${origin}/auth/callback`,
-      },
-    });
+    const { data, error } = await signUp(email, password, redirectTo);
     
     if (error) {
       return NextResponse.json(
@@ -49,7 +44,7 @@ export async function POST(request: NextRequest) {
       message: "验证邮件已发送到您的邮箱"
     });
     
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('注册错误:', error);
     return NextResponse.json(
       { error: "注册过程中发生错误" },

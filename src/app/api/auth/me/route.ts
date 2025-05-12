@@ -1,10 +1,10 @@
-import { supabase } from '@/lib/supabase/client';
+import { getSession, getUser } from '@/lib/supabase/auth';
 import { NextResponse } from 'next/server';
 
 export async function GET() {
   try {
     // 获取当前用户会话
-    const { data: { session }, error } = await supabase.auth.getSession();
+    const { data: { session }, error } = await getSession();
     
     if (error || !session) {
       return NextResponse.json(
@@ -14,7 +14,7 @@ export async function GET() {
     }
     
     // 获取用户详情
-    const { data: { user }, error: userError } = await supabase.auth.getUser();
+    const { data: { user }, error: userError } = await getUser();
     
     if (userError || !user) {
       return NextResponse.json(
@@ -28,7 +28,7 @@ export async function GET() {
       session
     });
     
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('获取用户信息错误:', error);
     return NextResponse.json(
       { error: "获取用户信息过程中发生错误" },

@@ -15,8 +15,9 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import { login, resetPasswordRequest, sendOtpLogin } from "@/api/auth";
-import { AnimatedAlert, AnimatedSuccessMessage } from "@/components/ui/animated-alert";
+import { login, resetPasswordRequest } from "@/api/auth";
+import { AnimatedAlert, AnimatedSuccessMessage } from "@/components/ui/motion";
+import { ButtonLoadingSpinner } from "@/components/ui/loading";
 
 // 验证Schema
 const loginSchema = z.object({
@@ -46,7 +47,7 @@ export default function FormLogin() {
   const onSubmit = async (data: LoginFormValues) => {
     setIsLoading(true);
     setError(null);
-    
+
     try {
       await login(data.email, data.password);
       router.refresh();
@@ -58,41 +59,18 @@ export default function FormLogin() {
     }
   };
 
-  // 处理发送魔法链接
-  const handleMagicLinkLogin = async () => {
-    const email = form.getValues("email");
-    
-    if (!email || !z.string().email().safeParse(email).success) {
-      form.setError("email", { message: "请先输入有效的电子邮箱" });
-      return;
-    }
-    
-    setIsLoading(true);
-    setError(null);
-    
-    try {
-      await sendOtpLogin(email, false);
-      setIsMagicLinkSent(true);
-      setResetEmail(email);
-    } catch (err: any) {
-      setError(err.response?.data?.error || "发送登录链接失败，请稍后再试");
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
   // 处理重置密码
   const handlePasswordReset = async () => {
     const email = form.getValues("email");
-    
+
     if (!email || !z.string().email().safeParse(email).success) {
       form.setError("email", { message: "请先输入有效的电子邮箱" });
       return;
     }
-    
+
     setIsLoading(true);
     setError(null);
-    
+
     try {
       await resetPasswordRequest(email);
       setIsMagicLinkSent(true);
@@ -110,10 +88,10 @@ export default function FormLogin() {
         <AnimatedSuccessMessage
           show={true}
           title="邮件已发送！"
-          description={`我们已向 ${resetEmail} 发送了一封包含登录链接的电子邮件。`}
+          description={`我们已向 ${resetEmail} 发送了一封包含重置密码链接的电子邮件。`}
         />
-        <Button 
-          variant="outline" 
+        <Button
+          variant="outline"
           onClick={() => setIsMagicLinkSent(false)}
           className="mt-2"
         >
@@ -125,11 +103,8 @@ export default function FormLogin() {
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-        <AnimatedAlert 
-          show={!!error} 
-          variant="destructive"
-        >
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+        <AnimatedAlert show={!!error} variant="destructive">
           {error}
         </AnimatedAlert>
 
@@ -140,9 +115,9 @@ export default function FormLogin() {
             <FormItem>
               <FormLabel>电子邮箱</FormLabel>
               <FormControl>
-                <Input 
-                  placeholder="your@email.com" 
-                  {...field} 
+                <Input
+                  placeholder="your@email.com"
+                  {...field}
                   disabled={isLoading}
                 />
               </FormControl>
@@ -158,10 +133,10 @@ export default function FormLogin() {
             <FormItem>
               <FormLabel>密码</FormLabel>
               <FormControl>
-                <Input 
-                  type="password" 
-                  placeholder="••••••••" 
-                  {...field} 
+                <Input
+                  type="password"
+                  placeholder="••••••••"
+                  {...field}
                   disabled={isLoading}
                 />
               </FormControl>
@@ -170,35 +145,26 @@ export default function FormLogin() {
           )}
         />
 
-        <div className="flex items-center justify-between">
-          <Button
-            type="button"
-            variant="link"
-            size="sm"
-            className="px-0 font-normal"
-            onClick={handlePasswordReset}
-            disabled={isLoading}
-          >
-            忘记密码?
-          </Button>
-          <Button
-            type="button"
-            variant="link"
-            size="sm"
-            className="px-0 font-normal"
-            onClick={handleMagicLinkLogin}
-            disabled={isLoading}
-          >
-            使用邮箱验证码
-          </Button>
-        </div>
-
-        <Button 
-          type="submit" 
-          className="w-full" 
+        <Button
+          type="button"
+          variant="link"
+          size="sm"
+          className="px-0 font-normal"
+          onClick={handlePasswordReset}
           disabled={isLoading}
         >
-          {isLoading ? "登录中..." : "登录"}
+          忘记密码?
+        </Button>
+
+        <Button type="submit" className="w-full" disabled={isLoading}>
+          {isLoading ? (
+            <>
+              <ButtonLoadingSpinner className="mr-2" />
+              登录中...
+            </>
+          ) : (
+            "登录"
+          )}
         </Button>
       </form>
     </Form>

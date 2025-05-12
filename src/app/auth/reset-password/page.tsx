@@ -1,5 +1,3 @@
-"use client";
-
 import { useState } from "react";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -17,8 +15,7 @@ import {
 } from "@/components/ui/form";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { updatePassword } from "@/api/auth";
-import { AnimatedAlert, AnimatedSuccessMessage } from "@/components/ui/animated-alert";
-import { AnimatedContainer, AnimatedHeading, AnimatedText, ScaleAnimatedContainer } from "@/components/ui/animated-container";
+import { FadeUp, FadeScale, MotionH2, MotionP, AnimatedAlert, AnimatedSuccessMessage } from "@/components/ui/motion";
 
 // 验证Schema
 const resetPasswordSchema = z.object({
@@ -75,23 +72,27 @@ export default function ResetPasswordPage() {
 
   return (
     <div className="flex min-h-screen items-center justify-center py-12 px-4 sm:px-6 lg:px-8 bg-gradient-to-br from-indigo-50 via-white to-purple-50">
-      <AnimatedContainer className="w-full max-w-md space-y-8">
+      <FadeUp className="w-full max-w-md space-y-8">
         <div className="text-center">
-          <AnimatedHeading
+          <MotionH2
             className="mt-6 text-3xl font-bold tracking-tight text-gray-900"
-            delay={0.2}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.5, delay: 0.2 }}
           >
             重置您的密码
-          </AnimatedHeading>
-          <AnimatedText
+          </MotionH2>
+          <MotionP
             className="mt-2 text-sm text-gray-600"
-            delay={0.3}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.5, delay: 0.3 }}
           >
             请输入您的新密码
-          </AnimatedText>
+          </MotionP>
         </div>
 
-        <ScaleAnimatedContainer delay={0.4}>
+        <FadeScale transition={{ duration: 0.5, delay: 0.4 }}>
           <Card>
             <CardHeader>
               <CardTitle>设置新密码</CardTitle>
@@ -177,8 +178,8 @@ export default function ResetPasswordPage() {
               </Button>
             </CardFooter>
           </Card>
-        </ScaleAnimatedContainer>
-      </AnimatedContainer>
+        </FadeScale>
+      </FadeUp>
     </div>
   );
 } 

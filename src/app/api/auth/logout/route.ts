@@ -1,16 +1,16 @@
-import { supabase } from '@/lib/supabase/client';
+import { signOut } from '@/lib/supabase/auth';
 import { NextResponse } from 'next/server';
 
 export async function POST() {
   try {
     // 执行登出操作
-    await supabase.auth.signOut();
+    await signOut();
     
     return NextResponse.json({ 
       message: "成功退出登录"
     });
     
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('登出错误:', error);
     return NextResponse.json(
       { error: "登出过程中发生错误" },

@@ -1,20 +1,18 @@
-import { supabase } from '@/lib/supabase/client';
+import { resetPasswordForEmail, updatePassword } from '@/lib/supabase/auth';
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 
-// 发送重置密码邮件的Schema
-const resetRequestSchema = z.object({
-  email: z.string().email({ message: "请输入有效的电子邮箱地址" }),
-});
-
-// 重置密码的Schema
-const resetPasswordSchema = z.object({
+export const resetPasswordSchema = z.object({
   password: z
     .string()
     .min(8, { message: "密码至少需要8个字符" })
     .regex(/[a-z]/, { message: "密码必须包含至少一个小写字母" })
     .regex(/[A-Z]/, { message: "密码必须包含至少一个大写字母" })
     .regex(/[0-9]/, { message: "密码必须包含至少一个数字" }),
+});
+
+export const resetRequestSchema = z.object({
+  email: z.string().email({ message: "请输入有效的电子邮箱地址" }),
 });
 
 // 发送重置密码邮件
@@ -33,11 +31,10 @@ export async function POST(request: NextRequest) {
     
     const { email } = validationResult.data;
     const origin = request.headers.get('origin') || request.nextUrl.origin;
+    const redirectTo = `${origin}/auth/reset-password`;
     
     // 发送重置密码邮件
-    const { error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: `${origin}/auth/reset-password`,
-    });
+    const { error } = await resetPasswordForEmail(email, redirectTo);
     
     if (error) {
       return NextResponse.json(
@@ -50,7 +47,7 @@ export async function POST(request: NextRequest) {
       message: "重置密码邮件已发送到您的邮箱"
     });
     
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('发送重置密码邮件错误:', error);
     return NextResponse.json(
       { error: "发送重置密码邮件过程中发生错误" },
@@ -76,9 +73,7 @@ export async function PUT(request: NextRequest) {
     const { password } = validationResult.data;
     
     // 更新密码
-    const { error } = await supabase.auth.updateUser({
-      password,
-    });
+    const { error } = await updatePassword(password);
     
     if (error) {
       return NextResponse.json(
@@ -91,7 +86,7 @@ export async function PUT(request: NextRequest) {
       message: "密码已成功更新"
     });
     
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('重置密码错误:', error);
     return NextResponse.json(
       { error: "重置密码过程中发生错误" },

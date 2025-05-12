@@ -1,43 +1,66 @@
-import axiosInstance from "./axios";
+import axiosInstance from "@/api/axios";
+import { User, Session } from "@supabase/supabase-js";
+
+// 定义响应类型
+interface AuthResponse {
+  user?: User;
+  session?: Session;
+  message?: string;
+  error?: string;
+}
 
 // 登录服务
-export const login = async (email: string, password: string) => {
-  const response = await axiosInstance.post("/api/auth/login", { email, password });
-  return response;
+export const login = async (
+  email: string,
+  password: string
+): Promise<AuthResponse> => {
+  return axiosInstance.post("/auth/login", { email, password });
 };
 
 // 注册服务
-export const register = async (email: string, password: string) => {
-  const response = await axiosInstance.post("/api/auth/register", { email, password });
-  return response;
+export const register = async (
+  email: string,
+  password: string
+): Promise<AuthResponse> => {
+  return axiosInstance.post("/auth/register", { email, password });
 };
 
 // 发送重置密码邮件
-export const resetPasswordRequest = async (email: string) => {
-  const response = await axiosInstance.post("/api/auth/reset-password", { email });
-  return response;
+export const resetPasswordRequest = async (
+  email: string
+): Promise<AuthResponse> => {
+  return axiosInstance.post("/auth/reset-password", { email });
 };
 
 // 更新密码
-export const updatePassword = async (password: string) => {
-  const response = await axiosInstance.put("/api/auth/reset-password", { password });
-  return response;
+export const updatePassword = async (
+  password: string
+): Promise<AuthResponse> => {
+  return axiosInstance.put("/auth/reset-password", { password });
 };
 
 // 发送OTP登录验证码
-export const sendOtpLogin = async (email: string, shouldCreateUser = false) => {
-  const response = await axiosInstance.post("/api/auth/otp", { email, shouldCreateUser });
-  return response;
+export const sendOtpLogin = async (
+  email: string,
+  shouldCreateUser = false
+): Promise<AuthResponse> => {
+  return axiosInstance.post("/auth/otp", { email, shouldCreateUser });
+};
+
+// 验证OTP验证码
+export const verifyOtp = async (
+  email: string,
+  otp: string
+): Promise<AuthResponse> => {
+  return axiosInstance.post("/auth/otp/verify", { email, otp });
 };
 
 // 获取当前用户信息
-export const getCurrentUser = async () => {
-  const response = await axiosInstance.get("/api/auth/me");
-  return response;
+export const getCurrentUser = async (): Promise<AuthResponse> => {
+  return axiosInstance.get("/auth/me");
 };
 
 // 退出登录
-export const logout = async () => {
-  const response = await axiosInstance.post("/api/auth/logout");
-  return response;
-}; 
+export const logout = async (): Promise<AuthResponse> => {
+  return axiosInstance.post("/auth/logout");
+};

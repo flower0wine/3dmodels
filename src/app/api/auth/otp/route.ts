@@ -1,8 +1,8 @@
-import { supabase } from '@/lib/supabase/client';
+import { signInWithOtp } from '@/lib/supabase/auth';
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 
-const otpSchema = z.object({
+export const otpSchema = z.object({
   email: z.string().email({ message: "请输入有效的电子邮箱地址" }),
   shouldCreateUser: z.boolean().optional().default(false),
 });
@@ -22,15 +22,10 @@ export async function POST(request: NextRequest) {
     
     const { email, shouldCreateUser } = validationResult.data;
     const origin = request.headers.get('origin') || request.nextUrl.origin;
+    const redirectTo = `${origin}/auth/callback`;
     
     // 发送OTP验证码
-    const { error } = await supabase.auth.signInWithOtp({
-      email,
-      options: {
-        shouldCreateUser,
-        emailRedirectTo: `${origin}/auth/callback`,
-      },
-    });
+    const { error } = await signInWithOtp(email, shouldCreateUser, redirectTo);
     
     if (error) {
       return NextResponse.json(
@@ -43,7 +38,7 @@ export async function POST(request: NextRequest) {
       message: "验证码已发送到您的邮箱"
     });
     
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('发送OTP验证码错误:', error);
     return NextResponse.json(
       { error: "发送验证码过程中发生错误" },
