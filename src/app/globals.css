@@ -76,6 +76,9 @@
   --sidebar-accent-foreground: oklch(0.208 0.042 265.755);
   --sidebar-border: oklch(0.929 0.013 255.508);
   --sidebar-ring: oklch(0.704 0.04 256.788);
+  /* 流星动画默认值 */
+  --meteor-delay: 0s;
+  --meteor-duration: 5s;
 }
 
 .dark {
@@ -119,4 +122,28 @@
   body {
     @apply bg-background text-foreground;
   }
+}
+
+@theme inline {
+  --animate-meteor-effect: meteor var(--meteor-duration, 5s) linear infinite;
+  
+  @keyframes meteor {
+    0% {
+      transform: rotate(215deg) translateX(0);
+      opacity: 1;
+    }
+    70% {
+      opacity: 1;
+    }
+    100% {
+      transform: rotate(215deg) translateX(-500px);
+      opacity: 0;
+    }
+  }
+}
+
+/* 流星动画类 */
+.animate-meteor-effect {
+  animation: meteor var(--meteor-duration, 5s) linear infinite;
+  animation-delay: var(--meteor-delay, 0s);
 }

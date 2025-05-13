@@ -55,6 +55,17 @@ export async function signInWithOtp(email: string, shouldCreateUser: boolean, re
 }
 
 /**
+ * 验证OTP验证码
+ */
+export async function verifyOtp(email: string, token: string) {
+  return await supabase.auth.verifyOtp({
+    email,
+    token,
+    type: 'email',
+  });
+}
+
+/**
  * 发送重置密码邮件
  */
 export async function resetPasswordForEmail(email: string, redirectTo: string) {

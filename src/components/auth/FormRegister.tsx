@@ -15,9 +15,11 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import { register, sendOtpLogin, verifyOtp } from "@/api/auth";
+import { sendOtpLogin } from "@/api/auth";
 import { AnimatedAlert, AnimatedSuccessMessage } from "@/components/ui/motion";
 import { ButtonLoadingSpinner } from "@/components/ui/loading";
+import axiosInstance from "@/api/axios";
+import { useUserStore } from "@/store/userStore";
 
 // 验证Schema
 const registerSchema = z.object({
@@ -43,6 +45,10 @@ export default function FormRegister() {
   const [error, setError] = useState<string | null>(null);
   const [isVerificationSent, setIsVerificationSent] = useState(false);
   const [isVerificationSuccess, setIsVerificationSuccess] = useState(false);
+  const [countdown, setCountdown] = useState(0);
+  
+  // 使用用户 store
+  const login = useUserStore(state => state.login);
 
   // 注册表单
   const form = useForm<RegisterFormValues>({
@@ -71,6 +77,17 @@ export default function FormRegister() {
       await sendOtpLogin(email, true);
       
       setIsVerificationSent(true);
+      // 设置倒计时60秒
+      setCountdown(60);
+      const timer = setInterval(() => {
+        setCountdown(prev => {
+          if (prev <= 1) {
+            clearInterval(timer);
+            return 0;
+          }
+          return prev - 1;
+        });
+      }, 1000);
     } catch (err: any) {
       setError(err.response?.data?.error || "发送验证码失败，请稍后再试");
     } finally {
@@ -84,11 +101,21 @@ export default function FormRegister() {
     setError(null);
     
     try {
-      // 首先验证验证码
-      await verifyOtp(data.email, data.verificationCode);
+      // 直接调用验证OTP接口，同时传递密码进行注册
+      const response = await axiosInstance.post("/auth/otp/verify", { 
+        email: data.email, 
+        token: data.verificationCode,
+        password: data.password
+      });
       
-      // 验证码正确后进行注册
-      await register(data.email, data.password);
+      // 检查响应数据中是否包含user和session信息
+      if (!response.data?.user || !response.data?.session) {
+        setError("注册失败，无法创建用户账号");
+        return;
+      }
+      
+      // 保存用户信息到 store
+      login(response.data.user, response.data.session);
       
       setIsVerificationSuccess(true);
       
@@ -141,9 +168,9 @@ export default function FormRegister() {
                     type="button" 
                     variant="outline" 
                     onClick={handleSendVerificationCode}
-                    disabled={isLoading || isVerificationSent}
+                    disabled={isLoading || countdown > 0}
                   >
-                    {isVerificationSent ? "已发送" : "发送验证码"}
+                    {countdown > 0 ? `${countdown}秒后重试` : (isVerificationSent ? "重新发送" : "发送验证码")}
                   </Button>
                 </div>
               </FormControl>
@@ -162,7 +189,7 @@ export default function FormRegister() {
                 <Input
                   placeholder="输入6位验证码"
                   {...field}
-                  disabled={isLoading || !isVerificationSent}
+                  disabled={isLoading}
                 />
               </FormControl>
               <FormMessage />

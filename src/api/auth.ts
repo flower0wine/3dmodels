@@ -47,14 +47,6 @@ export const sendOtpLogin = async (
   return axiosInstance.post("/auth/otp", { email, shouldCreateUser });
 };
 
-// 验证OTP验证码
-export const verifyOtp = async (
-  email: string,
-  otp: string
-): Promise<AuthResponse> => {
-  return axiosInstance.post("/auth/otp/verify", { email, otp });
-};
-
 // 获取当前用户信息
 export const getCurrentUser = async (): Promise<AuthResponse> => {
   return axiosInstance.get("/auth/me");
