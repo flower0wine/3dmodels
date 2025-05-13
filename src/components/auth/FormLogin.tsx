@@ -15,10 +15,9 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import { login as apiLogin, resetPasswordRequest } from "@/api/auth";
 import { AnimatedAlert, AnimatedSuccessMessage } from "@/components/ui/motion";
 import { ButtonLoadingSpinner } from "@/components/ui/loading";
-import { useUserStore } from "@/store/userStore";
+import { signInWithPassword, resetPasswordForEmail } from "@/lib/supabase/auth";
 
 // 验证Schema
 const loginSchema = z.object({
@@ -35,9 +34,6 @@ export default function FormLogin() {
   const [isMagicLinkSent, setIsMagicLinkSent] = useState(false);
   const [resetEmail, setResetEmail] = useState("");
   
-  // 使用用户 store
-  const storeLogin = useUserStore(state => state.login);
-
   // 登录表单
   const form = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
@@ -48,25 +44,27 @@ export default function FormLogin() {
   });
 
   // 处理登录提交
-  const onSubmit = async (data: LoginFormValues) => {
+  const onSubmit = async (values: LoginFormValues) => {
     setIsLoading(true);
     setError(null);
 
     try {
-      const response = await apiLogin(data.email, data.password);
-      
-      // 检查响应数据中是否包含user和session信息
-      if (!response.user || !response.session) {
-        setError("登录失败，服务器返回的数据无效");
+      const { data, error } = await signInWithPassword(
+        values.email,
+        values.password
+      );
+
+      if (error) {
+        console.error(error.message);
         return;
       }
-      
-      // 保存用户信息到 store
-      storeLogin(response.user, response.session);
-      
+
+      if (data) {}
+
       router.refresh();
       router.push("/");
     } catch (err: any) {
+      console.error(err);
       setError(err.response?.data?.error || "登录失败，请检查您的凭据");
     } finally {
       setIsLoading(false);
@@ -86,10 +84,12 @@ export default function FormLogin() {
     setError(null);
 
     try {
-      await resetPasswordRequest(email);
+      const redirectTo = `${origin}/auth/reset-password`;
+      await resetPasswordForEmail(email, redirectTo);
       setIsMagicLinkSent(true);
       setResetEmail(email);
     } catch (err: any) {
+      console.error(err);
       setError(err.response?.data?.error || "发送重置密码链接失败，请稍后再试");
     } finally {
       setIsLoading(false);

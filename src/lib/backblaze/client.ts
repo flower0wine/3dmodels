@@ -1,3 +1,5 @@
+"use server"
+
 import { S3Client } from "@aws-sdk/client-s3";
 
 if (!process.env.B2_ENDPOINT || !process.env.B2_BUCKET || !process.env.B2_KEY_ID || !process.env.B2_APP_KEY) {

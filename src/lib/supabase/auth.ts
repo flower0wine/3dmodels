@@ -1,9 +1,12 @@
-import { supabase } from '@/lib/supabase/client';
+"use server"
+
+import { createClient } from '@/lib/supabase/server';
 
 /**
  * 用户登录
  */
 export async function signInWithPassword(email: string, password: string) {
+  const supabase = await createClient();
   return await supabase.auth.signInWithPassword({ email, password });
 }
 
@@ -11,6 +14,7 @@ export async function signInWithPassword(email: string, password: string) {
  * 用户注册
  */
 export async function signUp(email: string, password: string, redirectTo: string) {
+  const supabase = await createClient();
   return await supabase.auth.signUp({
     email,
     password,
@@ -24,6 +28,7 @@ export async function signUp(email: string, password: string, redirectTo: string
  * 登出用户
  */
 export async function signOut() {
+  const supabase = await createClient();
   return await supabase.auth.signOut();
 }
 
@@ -31,6 +36,7 @@ export async function signOut() {
  * 获取当前会话
  */
 export async function getSession() {
+  const supabase = await createClient();
   return await supabase.auth.getSession();
 }
 
@@ -38,6 +44,7 @@ export async function getSession() {
  * 获取当前用户
  */
 export async function getUser() {
+  const supabase = await createClient();
   return await supabase.auth.getUser();
 }
 
@@ -45,6 +52,7 @@ export async function getUser() {
  * 发送OTP验证码
  */
 export async function signInWithOtp(email: string, shouldCreateUser: boolean, redirectTo: string) {
+  const supabase = await createClient();
   return await supabase.auth.signInWithOtp({
     email,
     options: {
@@ -58,6 +66,7 @@ export async function signInWithOtp(email: string, shouldCreateUser: boolean, re
  * 验证OTP验证码
  */
 export async function verifyOtp(email: string, token: string) {
+  const supabase = await createClient();
   return await supabase.auth.verifyOtp({
     email,
     token,
@@ -69,6 +78,7 @@ export async function verifyOtp(email: string, token: string) {
  * 发送重置密码邮件
  */
 export async function resetPasswordForEmail(email: string, redirectTo: string) {
+  const supabase = await createClient();
   return await supabase.auth.resetPasswordForEmail(email, {
     redirectTo,
   });
@@ -78,6 +88,7 @@ export async function resetPasswordForEmail(email: string, redirectTo: string) {
  * 更新用户密码
  */
 export async function updatePassword(password: string) {
+  const supabase = await createClient();
   return await supabase.auth.updateUser({ password });
 }
 

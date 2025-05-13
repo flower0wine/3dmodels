@@ -15,11 +15,9 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import { sendOtpLogin } from "@/api/auth";
 import { AnimatedAlert, AnimatedSuccessMessage } from "@/components/ui/motion";
 import { ButtonLoadingSpinner } from "@/components/ui/loading";
-import axiosInstance from "@/api/axios";
-import { useUserStore } from "@/store/userStore";
+import { signInWithOtp, verifyOtp, signUp } from "@/lib/supabase/auth";
 
 // 验证Schema
 const registerSchema = z.object({
@@ -47,9 +45,6 @@ export default function FormRegister() {
   const [isVerificationSuccess, setIsVerificationSuccess] = useState(false);
   const [countdown, setCountdown] = useState(0);
   
-  // 使用用户 store
-  const login = useUserStore(state => state.login);
-
   // 注册表单
   const form = useForm<RegisterFormValues>({
     resolver: zodResolver(registerSchema),
@@ -74,7 +69,13 @@ export default function FormRegister() {
     setError(null);
 
     try {
-      await sendOtpLogin(email, true);
+      // 使用 Supabase auth API 发送 OTP
+      const redirectTo = `${window.location.origin}/auth/callback`;
+      const { error } = await signInWithOtp(email, true, redirectTo);
+      
+      if (error) {
+        throw new Error(error.message);
+      }
       
       setIsVerificationSent(true);
       // 设置倒计时60秒
@@ -89,7 +90,8 @@ export default function FormRegister() {
         });
       }, 1000);
     } catch (err: any) {
-      setError(err.response?.data?.error || "发送验证码失败，请稍后再试");
+      console.error(err);
+      setError(err.message || "发送验证码失败，请稍后再试");
     } finally {
       setIsLoading(false);
     }
@@ -101,21 +103,31 @@ export default function FormRegister() {
     setError(null);
     
     try {
-      // 直接调用验证OTP接口，同时传递密码进行注册
-      const response = await axiosInstance.post("/auth/otp/verify", { 
-        email: data.email, 
-        token: data.verificationCode,
-        password: data.password
-      });
+      // 首先验证OTP验证码
+      const { data: otpData, error: otpError } = await verifyOtp(
+        data.email,
+        data.verificationCode
+      );
       
-      // 检查响应数据中是否包含user和session信息
-      if (!response.data?.user || !response.data?.session) {
-        setError("注册失败，无法创建用户账号");
-        return;
+      if (otpError) {
+        throw new Error(otpError.message);
       }
       
-      // 保存用户信息到 store
-      login(response.data.user, response.data.session);
+      if (!otpData?.user) {
+        throw new Error("验证码验证失败");
+      }
+      
+      // 如果验证码验证成功，创建新用户账号
+      const redirectTo = `${window.location.origin}/auth/callback`;
+      const { error: signUpError } = await signUp(
+        data.email,
+        data.password,
+        redirectTo
+      );
+      
+      if (signUpError) {
+        throw new Error(signUpError.message);
+      }
       
       setIsVerificationSuccess(true);
       
@@ -125,7 +137,8 @@ export default function FormRegister() {
         router.push("/");
       }, 2000);
     } catch (err: any) {
-      setError(err.response?.data?.error || "注册失败，请稍后再试");
+      console.error(err);
+      setError(err.message || "注册失败，请稍后再试");
     } finally {
       setIsLoading(false);
     }

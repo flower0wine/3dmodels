@@ -3,9 +3,8 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
-import { logout } from "@/api/auth";
-import { useUserStore } from "@/store/userStore";
 import { ButtonLoadingSpinner } from "@/components/ui/loading";
+import { signOut } from "@/lib/supabase/auth";
 
 interface LogoutButtonProps {
   variant?: "default" | "destructive" | "outline" | "secondary" | "ghost" | "link";
@@ -20,19 +19,12 @@ export default function LogoutButton({
 }: LogoutButtonProps) {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
-  
-  // 使用用户 store
-  const storeLogout = useUserStore(state => state.logout);
 
   const handleLogout = async () => {
     setIsLoading(true);
     
     try {
-      // 调用 API 登出
-      await logout();
-      
-      // 清除本地存储的用户信息
-      storeLogout();
+      await signOut();
       
       // 刷新页面并跳转到首页
       router.refresh();

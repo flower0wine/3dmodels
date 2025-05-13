@@ -1,12 +1,17 @@
 import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
-import { fetchModels, fetchModelById, getModelFileUrl } from "@/api/models";
 import { ModelsResponse } from "@/types/model";
+import {
+  getModels,
+  getModelById,
+  getModelFileUrl,
+} from "@/lib/supabase/models";
 
 // 获取模型列表的Hooks
 export function useModelsInfinite(initialLimit = 20) {
   return useInfiniteQuery<ModelsResponse>({
     queryKey: ["models"],
-    queryFn: ({ pageParam }) => fetchModels(pageParam as string | undefined, initialLimit),
+    queryFn: ({ pageParam }) =>
+      getModels(pageParam as string | undefined, initialLimit),
     initialPageParam: undefined,
     getNextPageParam: (lastPage) => lastPage.nextCursor,
     staleTime: 1000 * 60 * 5, // 5分钟
@@ -17,7 +22,7 @@ export function useModelsInfinite(initialLimit = 20) {
 export function useModel(id: string) {
   return useQuery({
     queryKey: ["model", id],
-    queryFn: () => fetchModelById(id),
+    queryFn: () => getModelById(id),
     enabled: !!id,
     staleTime: 1000 * 60 * 10, // 10分钟
   });

@@ -1,6 +1,6 @@
 import { Suspense } from "react";
 import { HydrationBoundary, dehydrate, QueryClient } from "@tanstack/react-query";
-import { fetchModels } from "@/api/models";
+import { getModels } from "@/lib/supabase/models";
 import GridModelMasonry from "@/components/grid/GridModelMasonry";
 import SkeletonGrid from "@/components/skeleton/SkeletonGrid";
 import LayoutPageHeader from "@/components/layout/LayoutPageHeader";
@@ -13,7 +13,7 @@ export default async function HomePage() {
   
   await queryClient.prefetchInfiniteQuery({
     queryKey: ["models"],
-    queryFn: ({ pageParam }) => fetchModels(pageParam, 20),
+    queryFn: ({ pageParam }) => getModels(pageParam, 20),
     initialPageParam: undefined as string | undefined,
   });
   

@@ -1,17 +1,5 @@
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { Suspense } from "react";
-import FormLogin from "@/components/auth/FormLogin";
-import FormRegister from "@/components/auth/FormRegister";
+import AuthTabs from "@/components/auth/AuthTabs";
 import { FadeUp, FadeScale, MotionH2, MotionP } from "@/components/ui/motion";
-import { FormLoadingSpinner } from "@/components/ui/loading";
 import { BackgroundBeams } from "@/components/ui/background-beams";
 import { Meteors } from "@/components/ui/meteors";
 import { Spotlight } from "@/components/ui/spotlight";
@@ -47,50 +35,7 @@ export default function AuthPage() {
         </div>
 
         <FadeScale transition={{ duration: 0.5, delay: 0.4 }}>
-          <Tabs defaultValue="login" className="w-full">
-            <TabsList className="grid w-full grid-cols-2 mb-6">
-              <TabsTrigger value="login">登录</TabsTrigger>
-              <TabsTrigger value="register">注册</TabsTrigger>
-            </TabsList>
-
-            <TabsContent value="login">
-              <Card className="border-primary/10 bg-card/80 backdrop-blur-sm">
-                <CardHeader>
-                  <CardTitle>用户登录</CardTitle>
-                  <CardDescription>
-                    输入您的邮箱和密码登录您的账户
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <Suspense fallback={<FormLoadingSpinner />}>
-                    <FormLogin />
-                  </Suspense>
-                </CardContent>
-                <CardFooter className="flex justify-center text-sm text-muted-foreground">
-                  <p>登录即表示您同意我们的服务条款和隐私政策</p>
-                </CardFooter>
-              </Card>
-            </TabsContent>
-
-            <TabsContent value="register">
-              <Card className="border-primary/10 bg-card/80 backdrop-blur-sm">
-                <CardHeader>
-                  <CardTitle>创建账户</CardTitle>
-                  <CardDescription>
-                    注册一个新账户以使用所有功能
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <Suspense fallback={<FormLoadingSpinner />}>
-                    <FormRegister />
-                  </Suspense>
-                </CardContent>
-                <CardFooter className="flex justify-center text-sm text-muted-foreground">
-                  <p>注册即表示您同意我们的服务条款和隐私政策</p>
-                </CardFooter>
-              </Card>
-            </TabsContent>
-          </Tabs>
+          <AuthTabs showTerms={false} />
         </FadeScale>
       </FadeUp>
     </div>
