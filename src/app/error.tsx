@@ -10,10 +10,9 @@ import { Button } from "@/components/ui/button";
 
 interface ErrorPageProps {
   error: Error & { digest?: string };
-  reset: () => void;
 }
 
-export default function Error({ error, reset }: ErrorPageProps) {
+export default function Error({ error }: ErrorPageProps) {
   useEffect(() => {
     // 报告错误到错误跟踪服务
     console.error("应用程序错误:", error);
@@ -96,7 +95,9 @@ export default function Error({ error, reset }: ErrorPageProps) {
               </p>
               <div className="pt-4">
                 <Button 
-                  onClick={reset}
+                  onClick={() => {
+                    window.location.reload();
+                  }}
                   variant="destructive"
                   className="px-6"
                 >

@@ -4,6 +4,7 @@ import ProviderReactQuery from "@/components/provider/ProviderReactQuery";
 import "./globals.css";
 import { Navbar } from "@/components/layout/navbar/Navbar";
 import { getUser } from "@/lib/supabase/auth";
+import { Toaster } from "sonner";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -43,6 +44,7 @@ export default async function RootLayout({
           <ProviderReactQuery>
             {children}
           </ProviderReactQuery>
+          <Toaster />
         </main>
       </body>
     </html>

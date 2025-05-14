@@ -18,6 +18,7 @@ import {
 import { AnimatedAlert, AnimatedSuccessMessage } from "@/components/ui/motion";
 import { ButtonLoadingSpinner } from "@/components/ui/loading";
 import { signInWithPassword, resetPasswordForEmail } from "@/lib/supabase/auth";
+import { toast } from "sonner";
 
 // 验证Schema
 const loginSchema = z.object({
@@ -59,7 +60,9 @@ export default function FormLogin() {
         return;
       }
 
-      if (data) {}
+      if (data) {
+        toast.success("登录成功");
+      }
 
       router.refresh();
       router.push("/");

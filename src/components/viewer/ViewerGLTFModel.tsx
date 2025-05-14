@@ -14,7 +14,7 @@ export default function ViewerGLTFModel({ url }: ViewerGLTFModelProps) {
   useEffect(() => {
     return () => {
       // 使用useGLTF内置的预加载清理
-      if (url) useGLTF.preload(url);
+      if (url) useGLTF.preload("http://localhost:3000/dog.glb");
     };
   }, [url]);
   

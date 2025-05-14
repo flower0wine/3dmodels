@@ -13,7 +13,7 @@ interface ModalModelViewerProps {
 }
 
 export default function ModalModelViewer({ model, onClose }: ModalModelViewerProps) {
-  const { data, isLoading, error } = useModelFileUrl(model.model_url);
+  const { data, isLoading, error } = useModelFileUrl(model.storage_path);
   const modelUrl = data?.url;
 
   return (
@@ -31,7 +31,7 @@ export default function ModalModelViewer({ model, onClose }: ModalModelViewerPro
             <p className="text-red-500">加载模型失败</p>
           </div>
         ) : (
-          <ViewerModel modelUrl={modelUrl!} fileFormat={model.file_format} />
+          <ViewerModel modelUrl={modelUrl!} fileFormat={model.format} />
         )}
       </Suspense>
 
@@ -60,15 +60,11 @@ function ModelDetails({ model }: { model: Model }) {
         </div>
         <div>
           <h4 className="text-sm font-medium text-gray-500 dark:text-gray-400">文件格式</h4>
-          <p>{model.file_format.toUpperCase()}</p>
-        </div>
-        <div>
-          <h4 className="text-sm font-medium text-gray-500 dark:text-gray-400">多边形数量</h4>
-          <p>{model.polygon_count.toLocaleString()}</p>
+          <p>{model.format.toUpperCase()}</p>
         </div>
         <div>
           <h4 className="text-sm font-medium text-gray-500 dark:text-gray-400">文件大小</h4>
-          <p>{(model.file_size / 1024).toFixed(2)} KB</p>
+          <p>{((model.file_size ?? 0) / 1024).toFixed(2)} KB</p>
         </div>
         <div>
           <h4 className="text-sm font-medium text-gray-500 dark:text-gray-400">分类</h4>

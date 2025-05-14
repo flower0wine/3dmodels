@@ -77,7 +77,7 @@ export async function getModelFileUrl(storagePath: string): Promise<{ url: strin
     .from(bucket)
     .createSignedUrl(filePath, 60 * 60); // 1小时有效期
   
-  if (error || !data?.signedUrl) {
+  if (error) {
     console.error("获取模型文件URL失败:", error);
     throw new Error("无法获取模型文件URL");
   }

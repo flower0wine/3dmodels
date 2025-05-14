@@ -18,6 +18,7 @@ import {
 import { AnimatedAlert, AnimatedSuccessMessage } from "@/components/ui/motion";
 import { ButtonLoadingSpinner } from "@/components/ui/loading";
 import { signInWithOtp, verifyOtp, signUp } from "@/lib/supabase/auth";
+import { toast } from "sonner";
 
 // 验证Schema
 const registerSchema = z.object({
@@ -130,6 +131,8 @@ export default function FormRegister() {
       }
       
       setIsVerificationSuccess(true);
+
+      toast.success("注册成功");
       
       // 注册成功后自动跳转到首页
       setTimeout(() => {
