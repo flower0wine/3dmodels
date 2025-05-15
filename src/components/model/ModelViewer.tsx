@@ -20,7 +20,6 @@ import { OBJLoader } from 'three/examples/jsm/loaders/OBJLoader.js';
 interface ModelViewerProps {
   modelUrl: string;
   rotationSpeed?: number;
-  modelType?: "gltf" | "obj";
   environment?: string;
   onError?: (message: string) => void;
 }
@@ -118,102 +117,14 @@ function GltfModel({
   );
 }
 
-// OBJ模型组件 - 专门用于加载OBJ格式
-function ObjModel({ 
-  modelUrl, 
-  rotationSpeed = 0.005,
-  onError
-}: { 
-  modelUrl: string, 
-  rotationSpeed?: number,
-  onError?: (message: string) => void
-}) {
-  const groupRef = useRef<THREE.Group>(null);
-  const [error, setError] = useState<string | null>(null);
-  const [loading, setLoading] = useState(true);
-  const { camera } = useThree();
-  
-  // 使用OBJLoader加载OBJ文件
-  try {
-    const obj = useLoader(
-      OBJLoader, 
-      modelUrl, 
-      (loader) => {
-        // 配置加载器
-        loader.setRequestHeader({ 'Content-Type': 'application/octet-stream' });
-      },
-      (e) => {
-        console.error('Error loading OBJ:', e);
-        const errorMsg = '加载OBJ模型失败';
-        setError(errorMsg);
-        if (onError) onError(errorMsg);
-      }
-    );
-
-    // 处理加载好的模型
-    useEffect(() => {
-      if (obj && !error) {
-        setLoading(false);
-        
-        // 自动处理模型大小和位置
-        const box = new THREE.Box3().setFromObject(obj);
-        const size = box.getSize(new THREE.Vector3());
-        const center = box.getCenter(new THREE.Vector3());
-        
-        // 计算合适的缩放比例
-        const maxDim = Math.max(size.x, size.y, size.z);
-        const scale = 2 / maxDim; // 将模型缩放到适合视图的大小
-        
-        // 应用缩放
-        obj.scale.set(scale, scale, scale);
-        
-        // 将模型居中
-        obj.position.sub(center.multiplyScalar(scale));
-        
-        // 调整相机位置
-        if (camera instanceof THREE.PerspectiveCamera) {
-          const fov = camera.fov * (Math.PI / 180);
-          const cameraDistance = 2 / Math.tan(fov / 2);
-          camera.position.set(0, 0, cameraDistance);
-          camera.lookAt(0, 0, 0);
-          camera.updateProjectionMatrix();
-        }
-      }
-    }, [obj, error, camera]);
-    
-    // 进行模型旋转
-    useFrame(() => {
-      if (groupRef.current && rotationSpeed > 0 && !loading) {
-        groupRef.current.rotation.y += rotationSpeed;
-      }
-    });
-    
-    if (error) {
-      return null;
-    }
-
-    return (
-      <group ref={groupRef}>
-        <primitive object={obj} />
-      </group>
-    );
-  } catch (e) {
-    console.error('Exception loading OBJ:', e);
-    if (onError) onError('加载OBJ模型时发生异常，文件可能太大或格式不支持');
-    return null;
-  }
-}
-
 // 自动调整模型缩放比例的容器
 function ModelContainer({ 
   modelUrl, 
-  modelType, 
   rotationSpeed,
   environment = "city",
   onError
 }: { 
   modelUrl: string, 
-  modelType: "gltf" | "obj", 
   rotationSpeed: number,
   environment?: string,
   onError?: (message: string) => void
@@ -222,11 +133,7 @@ function ModelContainer({
     <Stage environment={environment as any} intensity={0.6} adjustCamera={false}>
       <Suspense fallback={<LoadingIndicator />}>
         <Center>
-          {modelType === "gltf" ? (
-            <GltfModel modelUrl={modelUrl} rotationSpeed={rotationSpeed} onError={onError} />
-          ) : modelType === "obj" ? (
-            <ObjModel modelUrl={modelUrl} rotationSpeed={rotationSpeed} onError={onError} />
-          ) : null}
+          <GltfModel modelUrl={modelUrl} rotationSpeed={rotationSpeed} onError={onError} />
         </Center>
       </Suspense>
     </Stage>
@@ -237,20 +144,9 @@ function ModelContainer({
 export default function ModelViewer({
   modelUrl,
   rotationSpeed = 0.01,
-  modelType = "gltf",
   environment = "city",
   onError
 }: ModelViewerProps) {
-  // 检测URL中的文件类型
-  const detectedType = useMemo(() => {
-    if (modelUrl?.toLowerCase().endsWith('.obj')) {
-      return 'obj';
-    } else if (modelUrl?.toLowerCase().endsWith('.glb') || modelUrl?.toLowerCase().endsWith('.gltf')) {
-      return 'gltf';
-    }
-    return modelType;
-  }, [modelUrl, modelType]);
-
   // 记录加载错误
   const handleError = (message: string) => {
     console.error(`Model loading error: ${message}`);
@@ -266,7 +162,6 @@ export default function ModelViewer({
         
         <ModelContainer 
           modelUrl={modelUrl} 
-          modelType={detectedType as "gltf" | "obj"} 
           rotationSpeed={rotationSpeed}
           environment={environment}
           onError={handleError}

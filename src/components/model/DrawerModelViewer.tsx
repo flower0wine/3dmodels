@@ -29,25 +29,11 @@ export default function DrawerModelViewer({
 }: DrawerModelViewerProps) {
   // 状态管理
   const [rotationSpeed, setRotationSpeed] = useState(0.01);
-  const [modelType, setModelType] = useState<"gltf" | "obj">("gltf");
   const [environment, setEnvironment] = useState<string>("city");
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   
-  // 检测模型格式并设置类型
-  useEffect(() => {
-    if (model.format) {
-      const format = model.format.toLowerCase();
-      if (format === "obj") {
-        setModelType("obj");
-      } else {
-        setModelType("gltf");
-      }
-    }
-  }, [model.format]);
-  
   // 获取模型URL
-  // const modelUrl = "/kitchen-transformed.glb";
-  const modelUrl = "/IronMan.obj";
+  const modelUrl = "/dog.glb";
   
   // 可用的环境预设
   const environments = [
@@ -130,14 +116,13 @@ export default function DrawerModelViewer({
                   </svg>
                   <h3 className="text-lg font-semibold text-red-800 mb-2">加载错误</h3>
                   <p className="text-red-700">{errorMessage}</p>
-                  <p className="text-sm text-red-600 mt-4">尝试加载其他格式的模型，或确认文件是否有效</p>
+                  <p className="text-sm text-red-600 mt-4">请确认GLB文件是否有效</p>
                 </div>
               </div>
             ) : (
               <ModelViewer 
                 modelUrl={modelUrl}
                 rotationSpeed={rotationSpeed}
-                modelType={modelType}
                 environment={environment}
                 onError={handleModelError}
               />
@@ -176,7 +161,7 @@ export default function DrawerModelViewer({
             </div>
             
             <div className="flex justify-between w-full">
-              <span className="text-xs text-gray-500">模型格式: {model.format?.toUpperCase() || "GLTF"}</span>
+              <span className="text-xs text-gray-500">模型格式: GLB</span>
               <DrawerClose asChild>
                 <Button variant="outline" size="sm">关闭</Button>
               </DrawerClose>
