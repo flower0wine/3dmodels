@@ -3,20 +3,20 @@
 import { useState } from "react";
 import Image from "next/image";
 import { Model } from "@/types/model";
-import ModalModelViewer from "@/components/modal/ModalModelViewer";
+import DrawerModelViewer from "@/components/model/DrawerModelViewer";
 
 interface CardModelProps {
   model: Model;
 }
 
 export default function CardModel({ model }: CardModelProps) {
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
 
   return (
     <>
       <div 
         className="rounded-lg overflow-hidden shadow-md bg-white dark:bg-zinc-900 cursor-pointer transition-transform hover:scale-[1.02]"
-        onClick={() => setIsModalOpen(true)}
+        onClick={() => setIsDrawerOpen(true)}
       >
         <div className="relative h-48 w-full">
           <Image
@@ -37,10 +37,12 @@ export default function CardModel({ model }: CardModelProps) {
           </div>
         </div>
       </div>
-
-      {isModalOpen && (
-        <ModalModelViewer model={model} onClose={() => setIsModalOpen(false)} />
-      )}
+      
+      <DrawerModelViewer 
+        model={model}
+        isOpen={isDrawerOpen}
+        onOpenChange={setIsDrawerOpen}
+      />
     </>
   );
 } 

@@ -42,10 +42,10 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
-.obj
-.glb
-.gltf
-.fbx
-.dae
-.ply
-.stl
+*.obj
+*.glb
+*.gltf
+*.fbx
+*.dae
+*.ply
+*.stl

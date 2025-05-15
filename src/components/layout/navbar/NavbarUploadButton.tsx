@@ -15,7 +15,12 @@ import {
 import dynamic from "next/dynamic";
 
 // 动态导入文件上传组件
-const FileUploader = dynamic(() => import("@/components/upload/FileUploader").then(mod => mod.FileUploader), {
+const UppyFileUploader = dynamic(() => import("@/components/upload/UppyFileUploader").then(mod => mod.UppyFileUploader), {
+  loading: () => <div className="p-8 text-center">加载上传组件...</div>,
+  ssr: false,
+});
+
+const SupabaseUploader = dynamic(() => import("@/components/upload/SupabaseUploader").then(mod => mod.SupabaseUploader), {
   loading: () => <div className="p-8 text-center">加载上传组件...</div>,
   ssr: false,
 });
@@ -68,7 +73,7 @@ export const NavbarUploadButton: React.FC<NavbarUploadButtonProps> = ({
           </DialogClose>
         </DialogHeader>
         <div className="mt-4">
-          <FileUploader
+          <UppyFileUploader
             bucket="models"
             folder="uploads"
             multiple={true}
