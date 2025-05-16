@@ -33,7 +33,7 @@ export default function DrawerModelViewer({
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   
   // 获取模型URL
-  const modelUrl = "/dog.glb";
+  const modelUrl = "/kitchen-transformed.glb";
   
   // 可用的环境预设
   const environments = [
@@ -78,27 +78,28 @@ export default function DrawerModelViewer({
       )}
       
       <Drawer open={isOpen} onOpenChange={onOpenChange} direction="right" dismissible={false} modal={false}>
-        <DrawerContent className="h-[100vh] !max-w-[none] !w-[80vw] z-50">
+        <DrawerContent className="h-[100vh] !max-w-[none] !w-full sm:!w-[90vw] md:!w-[80vw] lg:!w-[70vw] z-50">
           {/* 右上角关闭按钮 */}
           <button 
             onClick={() => onOpenChange(false)}
-            className="absolute right-4 top-4 z-50 p-2 rounded-full bg-white/80 dark:bg-gray-800/80 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+            className="absolute right-3 top-3 sm:right-4 sm:top-4 z-50 p-1.5 sm:p-2 rounded-full bg-white/80 dark:bg-gray-800/80 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
             aria-label="关闭"
           >
-            <X size={20} />
+            <X size={18} className="sm:hidden" />
+            <X size={20} className="hidden sm:block" />
           </button>
           
-          <DrawerHeader>
-            <DrawerTitle className="text-xl flex justify-between items-center">
+          <DrawerHeader className="p-3 sm:p-4 md:p-6">
+            <DrawerTitle className="text-lg sm:text-xl flex justify-between items-center">
               <span>{model.name}</span>
             </DrawerTitle>
-            <DrawerDescription>
+            <DrawerDescription className="text-xs sm:text-sm">
               {model.description || '3D模型预览'} - 作者: {model.author}
             </DrawerDescription>
             
-            <div className="mt-2 p-3 bg-blue-50 dark:bg-blue-950 rounded-md text-xs">
+            <div className="mt-2 p-2 sm:p-3 bg-blue-50 dark:bg-blue-950 rounded-md text-xs">
               <p className="font-semibold mb-1">操作指南:</p>
-              <ul className="list-disc pl-5 space-y-1">
+              <ul className="list-disc pl-4 sm:pl-5 space-y-1 text-xs sm:text-sm">
                 <li>鼠标左键拖动: 旋转模型</li>
                 <li>鼠标滚轮: 缩放模型</li>
                 <li>鼠标右键拖动: 平移视图</li>
@@ -107,16 +108,16 @@ export default function DrawerModelViewer({
             </div>
           </DrawerHeader>
           
-          <div className="p-4 h-[60vh] relative">
+          <div className="p-2 sm:p-4 h-[50vh] sm:h-[55vh] md:h-[60vh] relative">
             {errorMessage ? (
               <div className="absolute inset-0 flex items-center justify-center">
-                <div className="bg-red-100 p-6 rounded-lg shadow-lg max-w-md text-center">
-                  <svg className="w-12 h-12 text-red-500 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <div className="bg-red-100 p-4 sm:p-6 rounded-lg shadow-lg max-w-xs sm:max-w-sm md:max-w-md text-center">
+                  <svg className="w-8 h-8 sm:w-12 sm:h-12 text-red-500 mx-auto mb-3 sm:mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
                   </svg>
-                  <h3 className="text-lg font-semibold text-red-800 mb-2">加载错误</h3>
-                  <p className="text-red-700">{errorMessage}</p>
-                  <p className="text-sm text-red-600 mt-4">请确认GLB文件是否有效</p>
+                  <h3 className="text-base sm:text-lg font-semibold text-red-800 mb-2">加载错误</h3>
+                  <p className="text-sm text-red-700">{errorMessage}</p>
+                  <p className="text-xs sm:text-sm text-red-600 mt-3 sm:mt-4">请确认GLB文件是否有效</p>
                 </div>
               </div>
             ) : (
@@ -129,14 +130,15 @@ export default function DrawerModelViewer({
             )}
           </div>
           
-          <DrawerFooter className="flex flex-col">
-            <div className="flex flex-wrap gap-2 mb-2">
+          <DrawerFooter className="flex flex-col p-4 sm:p-6">
+            <div className="flex flex-wrap gap-1.5 sm:gap-2 mb-2">
               <Button 
                 variant="outline"
                 onClick={() => setRotationSpeed(prevSpeed => 
                   prevSpeed === 0.01 ? 0.03 : (prevSpeed === 0.03 ? 0 : 0.01)
                 )}
                 size="sm"
+                className="text-xs sm:text-sm px-2 py-1 h-auto sm:h-9"
               >
                 {rotationSpeed === 0 ? "开始旋转" : (rotationSpeed === 0.01 ? "加快旋转" : "停止旋转")}
               </Button>
@@ -145,6 +147,7 @@ export default function DrawerModelViewer({
                 variant="outline"
                 onClick={cycleEnvironment}
                 size="sm"
+                className="text-xs sm:text-sm px-2 py-1 h-auto sm:h-9"
               >
                 环境: {environments.find(env => env.id === environment)?.name || "默认"}
               </Button>
@@ -154,16 +157,23 @@ export default function DrawerModelViewer({
                   variant="outline"
                   onClick={() => setErrorMessage(null)}
                   size="sm"
+                  className="text-xs sm:text-sm px-2 py-1 h-auto sm:h-9"
                 >
                   重试
                 </Button>
               )}
             </div>
             
-            <div className="flex justify-between w-full">
-              <span className="text-xs text-gray-500">模型格式: GLB</span>
+            <div className="flex justify-between w-full items-center mt-2">
+              <span className="text-xs text-gray-500">模型格式: {model.format.toUpperCase()}</span>
               <DrawerClose asChild>
-                <Button variant="outline" size="sm">关闭</Button>
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  className="text-xs sm:text-sm"
+                >
+                  关闭
+                </Button>
               </DrawerClose>
             </div>
           </DrawerFooter>

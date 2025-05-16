@@ -15,25 +15,30 @@ export default function CardModel({ model }: CardModelProps) {
   return (
     <>
       <div 
-        className="rounded-lg overflow-hidden shadow-md bg-white dark:bg-zinc-900 cursor-pointer transition-transform hover:scale-[1.02]"
+        className="w-full rounded-lg overflow-hidden shadow-md bg-white dark:bg-zinc-900 hover:shadow-lg cursor-pointer transition-all duration-300 hover:scale-[1.02] mb-4"
         onClick={() => setIsDrawerOpen(true)}
       >
-        <div className="relative h-48 w-full">
+        <div className="relative w-full aspect-square sm:aspect-[4/3] md:aspect-[3/2]">
           <Image
             src={model.thumbnail_path}
             alt={model.name}
             fill
             className="object-cover"
-            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+            sizes="(max-width: 480px) 100vw, (max-width: 768px) 50vw, (max-width: 1280px) 33vw, 25vw"
             priority={false}
+            loading="lazy"
           />
         </div>
-        <div className="p-4">
-          <h3 className="text-lg font-semibold truncate">{model.name}</h3>
-          <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">作者: {model.author}</p>
+        <div className="p-3 sm:p-4">
+          <h3 className="text-base sm:text-lg font-semibold truncate">{model.name}</h3>
+          <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 mt-1 truncate">作者: {model.author}</p>
           <div className="flex justify-between mt-2 text-xs text-gray-500 dark:text-gray-400">
-            <span>{model.format.toUpperCase()}</span>
-            {/* <span>{Math.round(model.file_size / 1024)} KB</span> */}
+            <span className="px-1.5 py-0.5 bg-gray-100 dark:bg-gray-800 rounded text-xs">
+              {model.format.toUpperCase()}
+            </span>
+            {model.file_size && (
+              <span className="text-xs">{Math.round(model.file_size / 1024)} KB</span>
+            )}
           </div>
         </div>
       </div>

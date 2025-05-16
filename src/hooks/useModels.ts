@@ -15,6 +15,8 @@ export function useModelsInfinite(initialLimit = 20) {
     initialPageParam: undefined,
     getNextPageParam: (lastPage) => lastPage.nextCursor,
     staleTime: 1000 * 60 * 5, // 5分钟
+    refetchOnWindowFocus: false, // 窗口聚焦时不重新获取
+    refetchOnMount: true, // 组件挂载时重新获取
   });
 }
 
