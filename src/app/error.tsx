@@ -57,7 +57,6 @@ export default function Error({ error }: ErrorPageProps) {
 
             {/* 外环 - 使用不同的动画和颜色 */}
             <motion.div
-              animate={{ rotate: -360 }}
               transition={{
                 duration: 10,
                 repeat: Infinity,
@@ -87,7 +86,7 @@ export default function Error({ error }: ErrorPageProps) {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ delay: 0.3 }}
-              className="text-foreground space-y-4 max-w-md"
+              className="text-foreground space-y-4 max-w-md z-10"
             >
               <h2 className="text-2xl font-bold">出现错误</h2>
               <p className="text-muted-foreground text-sm">

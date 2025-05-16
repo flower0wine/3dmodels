@@ -12,8 +12,6 @@ export const modelSchema = z.object({
   updated_at: z.string().or(z.date()),
   author: z.string().optional(),
   format: z.string(),
-  polygon_count: z.number().optional(),
-  file_size: z.number().optional()
 }).passthrough();
 
 // 响应验证schema
