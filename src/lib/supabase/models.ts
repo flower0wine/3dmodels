@@ -7,20 +7,32 @@ import { createClient } from "@/lib/supabase/server";
  * 获取模型列表
  * @param cursor 分页游标
  * @param limit 每页数量
+ * @param search 搜索关键词，用于按名称搜索
  * @returns 模型列表和下一页游标
  */
-export async function getModels(cursor?: string, limit = 10): Promise<ModelsResponse> {
+export async function getModels(
+  cursor?: string, 
+  limit = 10, 
+  search?: string
+): Promise<ModelsResponse> {
   const supabase = await createClient();
   
   // 构建查询
   let query = supabase
     .from("models")
     .select("*")
-    .order("created_at", { ascending: false })
-    .limit(limit);
-
+    .order("created_at", { ascending: false });
+  
+  // 如果有搜索关键词，添加搜索条件
+  if (search && search.trim()) {
+    // 使用ilike进行不区分大小写的模糊搜索
+    query = query.ilike("name", `%${search.trim()}%`);
+  }
+  
+  // 添加分页
+  query = query.limit(limit);
+  
   if (cursor) {
-    // 假设cursor是created_at值
     query = query.lt("created_at", cursor);
   }
 
@@ -31,7 +43,7 @@ export async function getModels(cursor?: string, limit = 10): Promise<ModelsResp
     throw error;
   }
 
-  const nextCursor = data.length === limit ? data[data.length - 1].created_at : null;
+  const nextCursor = data.length === limit ? data[data.length - 1]?.created_at : null;
 
   return { models: data as Model[], nextCursor };
 }
@@ -123,7 +135,7 @@ export async function uploadModel(
   // 上传缩略图
   const thumbExt = thumbnail.name.split('.').pop();
   const thumbName = `${Date.now()}_${Math.random().toString(36).substring(2, 15)}.${thumbExt}`;
-  const thumbPath = `thumbnails/${thumbName}`;
+  const thumbPath = `${thumbName}`;
   
   const { error: thumbUploadError } = await supabase
     .storage
@@ -277,17 +289,16 @@ export async function updateModel(
   };
   
   // 更新数据库
-  const { data: updatedModel, error: updateError } = await supabase
+  const { data: updatedModels, error: updateError } = await supabase
     .from('models')
     .update(updatedData)
     .eq('id', id)
-    .select()
-    .single();
+    .select();
   
-  if (updateError || !updatedModel) {
+  if (updateError) {
     console.error("更新模型失败:", updateError);
-    throw new Error("更新模型失败");
+    throw new Error(`更新模型失败: ${updateError.message}`);
   }
   
-  return updatedModel as Model;
+  return updatedModels[0] as Model;
 } 

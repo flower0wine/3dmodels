@@ -14,7 +14,8 @@ import {
 import { Button } from "@/components/ui/button";
 import { Model } from "@/types/model";
 import ModelViewer from "./ModelViewer";
-import { X } from "lucide-react";
+import { X, Download } from "lucide-react";
+import { download } from "@/lib/utils";
 
 interface DrawerModelViewerProps {
   model: Model;
@@ -162,6 +163,18 @@ export default function DrawerModelViewer({
                   重试
                 </Button>
               )}
+              
+              <Button 
+                variant="outline"
+                onClick={() => {
+                  download(model.storage_path, `${model.name}.${model.format}`);
+                }}
+                size="sm"
+                className="text-xs sm:text-sm px-2 py-1 h-auto sm:h-9 text-blue-600 dark:text-blue-400 border-blue-200 dark:border-blue-800 hover:bg-blue-50 dark:hover:bg-blue-950"
+              >
+                <Download size={14} className="mr-1" />
+                下载模型
+              </Button>
             </div>
             
             <div className="flex justify-between w-full items-center mt-2">

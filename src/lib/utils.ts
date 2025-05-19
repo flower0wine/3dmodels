@@ -21,3 +21,13 @@ export function generateUniqueFilePath(fileName: string, folder?: string): strin
   const uniqueFileName = `${sanitizedBaseName}_${timestamp}_${random}.${extension}`;
   return folder ? `${folder}/${uniqueFileName}` : uniqueFileName;
 }
+
+export function download(link: string, name: string, isSelf: boolean = true) {
+  const a = document.createElement('a');
+  a.href = link;
+  a.download = name;
+  a.target = isSelf ? '_self' : '_blank';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+}
