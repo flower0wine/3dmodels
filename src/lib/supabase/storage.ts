@@ -2,11 +2,16 @@
 
 import { createClient } from '@/lib/supabase/server';
 
+type UploadOptions = {
+  upsert?: boolean;
+  contentType?: string;
+};
+
 /**
- * 直接上传文件到Supabase存储
- * @param bucket 存储桶名称
- * @param path 文件路径（包含文件名）
- * @param file 要上传的文件
+ * 上传文件到存储
+ * @param bucket 存储桶
+ * @param path 存储路径
+ * @param file 文件
  * @param options 上传选项
  * @returns 上传结果
  */
@@ -14,47 +19,42 @@ export async function uploadFile(
   bucket: string,
   path: string,
   file: File,
-  options?: {
-    cacheControl?: string;
-    upsert?: boolean;
-  }
+  options?: UploadOptions
 ) {
   const supabase = await createClient();
   
   try {
-    // 执行上传
+    // 使用ArrayBuffer上传文件
+    const arrayBuffer = await file.arrayBuffer();
+    
     const { data, error } = await supabase
       .storage
       .from(bucket)
-      .upload(path, file, {
-        cacheControl: options?.cacheControl || '3600',
-        upsert: options?.upsert || false
+      .upload(path, arrayBuffer, {
+        upsert: options?.upsert || false,
+        contentType: options?.contentType || file.type,
       });
     
     if (error) {
-      console.error('文件上传失败:', error);
       throw error;
     }
     
-    // 如果需要，获取公共URL
+    // 获取公共URL
     const { data: urlData } = await supabase
       .storage
       .from(bucket)
       .getPublicUrl(path);
     
-    return {
-      data: {
-        ...data,
-        publicUrl: urlData?.publicUrl
-      },
-      error: null
+    return { 
+      data: { 
+        ...data, 
+        publicUrl: urlData.publicUrl 
+      }, 
+      error: null 
     };
-  } catch (err) {
-    console.error('上传过程中发生错误:', err);
-    return {
-      data: null,
-      error: err instanceof Error ? err : new Error('未知上传错误')
-    };
+  } catch (error) {
+    console.error(`上传文件到 ${bucket}/${path} 失败:`, error);
+    return { data: null, error };
   }
 }
 

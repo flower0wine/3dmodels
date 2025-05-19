@@ -20,36 +20,40 @@ import { Trash2, UploadCloud, Save, XCircle, FileEdit } from "lucide-react";
 import { UppyFileUploader } from "@/components/upload/UppyFileUploader";
 
 import { uploadFile } from "@/lib/supabase/storage";
-import { updateModel, deleteModel } from "@/lib/supabase/models";
+import { updateModel, deleteModel, createModel } from "@/lib/supabase/models";
 import { generateUniqueFilePath } from "@/lib/utils";
 
 // 表单验证schema
-const editModelSchema = z.object({
+const modelFormSchema = z.object({
   name: z.string().min(2, "名称至少需要2个字符").max(100, "名称不能超过100个字符"),
   description: z.string().max(500, "描述不能超过500个字符").optional(),
   category: z.string().max(50, "分类不能超过50个字符").optional(),
 });
 
-type EditModelFormValues = z.infer<typeof editModelSchema>;
+type ModelFormValues = z.infer<typeof modelFormSchema>;
 
-interface FormEditModelProps {
-  modelId: string;
+interface FormModelProps {
+  modelId?: string; // 可选，如果提供则为编辑模式，否则为上传模式
 }
 
-export default function FormEditModel({ modelId }: FormEditModelProps) {
+export default function FormModel({ modelId }: FormModelProps) {
   const router = useRouter();
-  const { data: model, isLoading, error } = useModel(modelId);
+  const isEditMode = !!modelId;
+  
+  // 获取模型数据(编辑模式)
+  const { data: model, isLoading, error } = useModel(modelId || "");
   
   // 文件上传状态
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
-  const [uploadingType, setUploadingType] = useState<'thumbnail' | 'model' | null>(null);
+  const [uploadingType, setUploadingType] = useState<'thumbnail' | 'model' | 'form' | null>(null);
   
   // 文件选择引用
   const thumbnailInputRef = useRef<HTMLInputElement>(null);
   
   // 选择的文件
   const [selectedThumbnail, setSelectedThumbnail] = useState<File | null>(null);
+  const [uploadedThumbnail, setUploadedThumbnail] = useState<{url: string, path: string} | null>(null);
   const [uploadedModelFile, setUploadedModelFile] = useState<{url: string, format: string, size: number} | null>(null);
   
   // 预览
@@ -57,18 +61,18 @@ export default function FormEditModel({ modelId }: FormEditModelProps) {
   const [showModelUploader, setShowModelUploader] = useState(false);
   
   // 表单初始化
-  const form = useForm<EditModelFormValues>({
-    resolver: zodResolver(editModelSchema),
+  const form = useForm<ModelFormValues>({
+    resolver: zodResolver(modelFormSchema),
     defaultValues: {
+      name: isEditMode ? model?.name || "" : "",
+      description: isEditMode ? model?.description || "" : "",
+      category: isEditMode ? model?.category || "" : "",
+    },
+    values: isEditMode ? {
       name: model?.name || "",
       description: model?.description || "",
       category: model?.category || "",
-    },
-    values: {
-      name: model?.name || "",
-      description: model?.description || "",
-      category: model?.category || "",
-    },
+    } : undefined,
   });
   
   // 点击选择缩略图
@@ -77,7 +81,7 @@ export default function FormEditModel({ modelId }: FormEditModelProps) {
   };
   
   // 处理缩略图选择
-  const handleThumbnailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleThumbnailChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
     
@@ -100,12 +104,50 @@ export default function FormEditModel({ modelId }: FormEditModelProps) {
     // 创建预览URL
     const previewUrl = URL.createObjectURL(file);
     setThumbnailPreview(previewUrl);
+    
+    // 异步上传缩略图
+    await uploadThumbnail(file);
+  };
+  
+  // 上传缩略图
+  const uploadThumbnail = async (file: File) => {
+    try {
+      setUploadingType('thumbnail');
+      const uniquePath = generateUniqueFilePath(file.name);
+      
+      toast.loading("正在上传缩略图...");
+      
+      const { data: uploadResult, error: uploadError } = await uploadFile(
+        'thumbnails',
+        uniquePath,
+        file,
+        { upsert: true }
+      );
+
+      if (uploadError) {
+        throw new Error(`上传缩略图失败: ${uploadError.message}`);
+      }
+      
+      if (uploadResult?.publicUrl) {
+        setUploadedThumbnail({
+          url: uploadResult.publicUrl,
+          path: uniquePath
+        });
+        toast.success("缩略图上传成功");
+      }
+    } catch (error: any) {
+      console.error("上传缩略图失败:", error);
+      toast.error(`上传缩略图失败: ${error.message}`);
+    } finally {
+      setUploadingType(null);
+    }
   };
   
   // 清除选择的缩略图
   const clearThumbnail = () => {
     setSelectedThumbnail(null);
     setThumbnailPreview(null);
+    setUploadedThumbnail(null);
     if (thumbnailInputRef.current) {
       thumbnailInputRef.current.value = '';
     }
@@ -128,12 +170,69 @@ export default function FormEditModel({ modelId }: FormEditModelProps) {
     }
   }, []);
   
-  // 处理表单提交
-  const onSubmit = async (values: EditModelFormValues) => {
-    if (!model) return;
+  // 提交表单
+  const onSubmit = async (values: ModelFormValues) => {
+    if (isEditMode) {
+      await handleUpdateModel(values);
+    } else {
+      await handleCreateModel(values);
+    }
+  };
+  
+  // 处理创建模型
+  const handleCreateModel = async (values: ModelFormValues) => {
+    // 校验必需的文件是否已上传
+    if (!uploadedThumbnail) {
+      toast.error("请上传模型缩略图");
+      return;
+    }
+    
+    if (!uploadedModelFile) {
+      toast.error("请上传模型文件");
+      return;
+    }
     
     setIsSubmitting(true);
     setUploadProgress(0);
+    setUploadingType('form');
+    
+    try {
+      // 准备模型数据
+      const modelData = {
+        name: values.name,
+        description: values.description || "",
+        category: values.category || "",
+        thumbnail_path: uploadedThumbnail.url,
+        storage_path: uploadedModelFile.url,
+        format: uploadedModelFile.format,
+        file_size: uploadedModelFile.size,
+      };
+      
+      // 创建新模型
+      await createModel(modelData);
+      
+      setUploadProgress(100);
+      toast.success("模型上传成功");
+      
+      // 上传成功后重定向到首页
+      router.refresh();
+      router.push("/");
+    } catch (error: any) {
+      console.error("上传模型失败详情:", error);
+      toast.error(`上传失败: ${error.message}`);
+    } finally {
+      setIsSubmitting(false);
+      setUploadingType(null);
+    }
+  };
+  
+  // 处理更新模型
+  const handleUpdateModel = async (values: ModelFormValues) => {
+    if (!modelId || !model) return;
+    
+    setIsSubmitting(true);
+    setUploadProgress(0);
+    setUploadingType('form');
     
     try {
       // 准备更新数据
@@ -143,32 +242,9 @@ export default function FormEditModel({ modelId }: FormEditModelProps) {
         category: values.category || null,
       };
       
-      console.log("要更新的数据:", updateData, "模型ID:", modelId);
-      
-      // 上传新的缩略图（如果有）
-      if (selectedThumbnail) {
-        setUploadingType('thumbnail');
-        const uniquePath = generateUniqueFilePath(selectedThumbnail.name);
-        
-        const { data: uploadResult, error: uploadError } = await uploadFile(
-          'thumbnails',
-          uniquePath,
-          selectedThumbnail,
-          { upsert: true }
-        );
-
-        console.log("上传缩略图结果:", uploadResult);
-        
-        if (uploadError) {
-          throw new Error(`上传缩略图失败: ${uploadError.message}`);
-        }
-        
-        if (uploadResult?.publicUrl) {
-          updateData.thumbnail_path = uploadResult.publicUrl;
-          console.log("新的缩略图路径:", uploadResult.publicUrl);
-        }
-        
-        setUploadProgress(50);
+      // 添加新的缩略图（如果有）
+      if (uploadedThumbnail) {
+        updateData.thumbnail_path = uploadedThumbnail.url;
       }
       
       // 如果有上传的模型文件
@@ -176,10 +252,9 @@ export default function FormEditModel({ modelId }: FormEditModelProps) {
         updateData.storage_path = uploadedModelFile.url;
         updateData.format = uploadedModelFile.format;
         updateData.file_size = uploadedModelFile.size;
-        console.log("新的模型文件信息:", uploadedModelFile);
-        
-        setUploadProgress(80);
       }
+      
+      setUploadProgress(50);
       
       // 更新模型信息
       await updateModel(modelId, updateData);
@@ -200,7 +275,7 @@ export default function FormEditModel({ modelId }: FormEditModelProps) {
   
   // 处理删除模型
   const handleDeleteModel = async () => {
-    if (!model) return;
+    if (!modelId || !model) return;
     
     setIsSubmitting(true);
     
@@ -217,8 +292,8 @@ export default function FormEditModel({ modelId }: FormEditModelProps) {
     }
   };
   
-  // 如果正在加载或发生错误
-  if (isLoading) {
+  // 如果正在加载或发生错误(编辑模式)
+  if (isEditMode && isLoading) {
     return (
       <Card>
         <CardContent className="pt-6">
@@ -230,7 +305,7 @@ export default function FormEditModel({ modelId }: FormEditModelProps) {
     );
   }
   
-  if (error || !model) {
+  if (isEditMode && (error || !model)) {
     return (
       <Card>
         <CardContent className="pt-6">
@@ -247,8 +322,8 @@ export default function FormEditModel({ modelId }: FormEditModelProps) {
     <div className="space-y-8">
       <Card>
         <CardHeader>
-          <CardTitle>基本信息</CardTitle>
-          <CardDescription>修改模型的基本信息</CardDescription>
+          <CardTitle>{isEditMode ? "编辑模型" : "上传新模型"}</CardTitle>
+          <CardDescription>{isEditMode ? "修改模型信息和文件" : "填写模型信息并上传文件"}</CardDescription>
         </CardHeader>
         <CardContent>
           <Form {...form}>
@@ -317,16 +392,16 @@ export default function FormEditModel({ modelId }: FormEditModelProps) {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {/* 缩略图上传 */}
                 <div>
-                  <FormLabel className="block mb-2">模型缩略图</FormLabel>
+                  <FormLabel className="block mb-2">模型缩略图 <span className="text-red-500">*</span></FormLabel>
                   <div className="space-y-4">
                     <div
                       className="relative border-2 border-dashed rounded-lg p-4 h-[200px] flex flex-col items-center justify-center cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-900 transition-colors"
                       onClick={handleThumbnailClick}
                     >
-                      {thumbnailPreview || model.thumbnail_path ? (
+                      {thumbnailPreview || (isEditMode && model?.thumbnail_path) ? (
                         <div className="relative w-full h-full">
                           <Image
-                            src={thumbnailPreview || model.thumbnail_path}
+                            src={thumbnailPreview || (isEditMode ? model?.thumbnail_path || '' : '')}
                             alt="缩略图预览"
                             fill
                             className="object-contain rounded-lg"
@@ -367,6 +442,8 @@ export default function FormEditModel({ modelId }: FormEditModelProps) {
                     {selectedThumbnail && (
                       <p className="text-xs text-gray-500">
                         已选择: {selectedThumbnail.name} ({Math.round(selectedThumbnail.size / 1024)} KB)
+                        {uploadingType === 'thumbnail' && ' - 上传中...'}
+                        {uploadedThumbnail && ' - 已上传'}
                       </p>
                     )}
                   </div>
@@ -374,7 +451,7 @@ export default function FormEditModel({ modelId }: FormEditModelProps) {
                 
                 {/* 模型文件上传 */}
                 <div>
-                  <FormLabel className="block mb-2">模型文件</FormLabel>
+                  <FormLabel className="block mb-2">模型文件 {!isEditMode && <span className="text-red-500">*</span>}</FormLabel>
                   <div className="space-y-4">
                     {!showModelUploader ? (
                       <div 
@@ -402,17 +479,28 @@ export default function FormEditModel({ modelId }: FormEditModelProps) {
                               <XCircle size={12} className="mr-1" /> 移除
                             </button>
                           </div>
+                        ) : isEditMode && model ? (
+                          <div className="flex flex-col items-center justify-center h-full">
+                            <FileEdit className="h-12 w-12 text-gray-600 mb-4" />
+                            <p className="text-sm font-medium">当前模型文件</p>
+                            <p className="text-xs text-gray-500 mt-1">
+                              格式: {model.format.toUpperCase()}
+                            </p>
+                            <p className="text-xs text-gray-500">
+                              大小: {Math.round((model.file_size || 0) / 1024 / 1024)} MB
+                            </p>
+                            <p className="text-xs mt-4 text-blue-500">
+                              点击上传新文件（可选）
+                            </p>
+                          </div>
                         ) : (
                           <>
                             <UploadCloud className="h-12 w-12 text-gray-400 mb-4" />
                             <p className="text-sm text-gray-500">
-                              点击上传新模型文件
+                              点击上传模型文件
                             </p>
                             <p className="text-xs text-gray-400 mt-1">
-                              当前格式: {model.format.toUpperCase()}
-                            </p>
-                            <p className="text-xs text-gray-400 mt-1">
-                              当前大小: {Math.round((model.file_size || 0) / 1024 / 1024)} MB
+                              支持 GLTF, GLB, OBJ, FBX 格式
                             </p>
                           </>
                         )}
@@ -433,7 +521,7 @@ export default function FormEditModel({ modelId }: FormEditModelProps) {
                         
                         <UppyFileUploader 
                           bucket="models"
-                          folder={`models/${modelId}`}
+                          folder={`models${isEditMode && modelId ? `/${modelId}` : ''}`}
                           allowedFileTypes={[".glb", ".gltf", ".obj", ".fbx", ".stl"]}
                           multiple={false}
                           height="250px"
@@ -451,7 +539,7 @@ export default function FormEditModel({ modelId }: FormEditModelProps) {
               {isSubmitting && (
                 <div className="space-y-2">
                   <div className="flex justify-between text-sm">
-                    <span>{uploadingType === 'thumbnail' ? '上传缩略图' : uploadingType === 'model' ? '上传模型文件' : '更新模型信息'}</span>
+                    <span>{uploadingType === 'thumbnail' ? '上传缩略图' : uploadingType === 'model' ? '上传模型文件' : isEditMode ? '更新模型信息' : '创建模型'}</span>
                     <span>{uploadProgress}%</span>
                   </div>
                   <Progress value={uploadProgress} className="h-2" />
@@ -469,35 +557,37 @@ export default function FormEditModel({ modelId }: FormEditModelProps) {
                 </Button>
                 
                 <div className="flex gap-4">
-                  <AlertDialog>
-                    <AlertDialogTrigger asChild>
-                      <Button
-                        type="button"
-                        variant="destructive"
-                        disabled={isSubmitting}
-                      >
-                        <Trash2 className="mr-2 h-4 w-4" />
-                        删除模型
-                      </Button>
-                    </AlertDialogTrigger>
-                    <AlertDialogContent>
-                      <AlertDialogHeader>
-                        <AlertDialogTitle>确定要删除这个模型吗？</AlertDialogTitle>
-                        <AlertDialogDescription>
-                          此操作不可逆，删除后模型数据将无法恢复。
-                        </AlertDialogDescription>
-                      </AlertDialogHeader>
-                      <AlertDialogFooter>
-                        <AlertDialogCancel>取消</AlertDialogCancel>
-                        <AlertDialogAction
-                          onClick={handleDeleteModel}
-                          className="bg-red-500 hover:bg-red-600 text-white"
+                  {isEditMode && (
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <Button
+                          type="button"
+                          variant="destructive"
+                          disabled={isSubmitting}
                         >
-                          确认删除
-                        </AlertDialogAction>
-                      </AlertDialogFooter>
-                    </AlertDialogContent>
-                  </AlertDialog>
+                          <Trash2 className="mr-2 h-4 w-4" />
+                          删除模型
+                        </Button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>确定要删除这个模型吗？</AlertDialogTitle>
+                          <AlertDialogDescription>
+                            此操作不可逆，删除后模型数据将无法恢复。
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel>取消</AlertDialogCancel>
+                          <AlertDialogAction
+                            onClick={handleDeleteModel}
+                            className="bg-red-500 hover:bg-red-600 text-white"
+                          >
+                            确认删除
+                          </AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
+                  )}
                   
                   <Button
                     type="submit"
@@ -506,12 +596,12 @@ export default function FormEditModel({ modelId }: FormEditModelProps) {
                     {isSubmitting ? (
                       <>
                         <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                        保存中...
+                        {isEditMode ? '保存中...' : '上传中...'}
                       </>
                     ) : (
                       <>
                         <Save className="mr-2 h-4 w-4" />
-                        保存修改
+                        {isEditMode ? '保存修改' : '上传模型'}
                       </>
                     )}
                   </Button>

@@ -1,7 +1,7 @@
 import { HydrationBoundary, QueryClient, dehydrate } from "@tanstack/react-query";
 import { notFound } from "next/navigation";
 import { getModelById } from "@/lib/supabase/models";
-import FormEditModel from "@/components/form/FormEditModel";
+import FormModel from "@/components/form/FormModel";
 import LayoutPageHeader from "@/components/layout/LayoutPageHeader";
 
 interface EditModelPageProps {
@@ -44,7 +44,7 @@ export default async function EditModelPage({ params }: EditModelPageProps) {
         
         <div className="mt-8">
           <HydrationBoundary state={dehydrate(queryClient)}>
-            <FormEditModel modelId={id} />
+            <FormModel modelId={id} />
           </HydrationBoundary>
         </div>
       </div>

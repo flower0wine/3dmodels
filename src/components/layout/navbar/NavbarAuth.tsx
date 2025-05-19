@@ -17,10 +17,14 @@ export const NavbarAuth: React.FC<NavbarAuthProps> = ({
 }) => {
   return (
     <div className={`flex items-center gap-4 ${className}`}>
-      {user && (
-        <NavbarUploadButton />
+      {user ? (
+        <>
+          <NavbarUploadButton />
+          <NavbarUserMenu user={user} />
+        </>
+      ) : (
+        <NavbarAuthButton />
       )}
-      {user ? <NavbarUserMenu user={user} /> : <NavbarAuthButton />}
     </div>
   );
 }; 

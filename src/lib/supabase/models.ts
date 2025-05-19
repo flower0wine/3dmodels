@@ -301,4 +301,87 @@ export async function updateModel(
   }
   
   return updatedModels[0] as Model;
+}
+
+/**
+ * 创建新模型
+ * @param modelData 模型基本数据（包括缩略图URL）
+ * @param thumbnailFile 可选的缩略图文件，如果modelData中已有thumbnail_path则不需要
+ * @returns 创建的模型信息
+ */
+export async function createModel(
+  modelData: Partial<Model>,
+  thumbnailFile?: File
+): Promise<Model> {
+  const supabase = await createClient();
+  
+  // 获取当前用户
+  const { data: userData } = await supabase.auth.getUser();
+  if (!userData.user) {
+    throw new Error("未登录，请先登录");
+  }
+  
+  try {
+    let thumbnailUrl = modelData.thumbnail_path;
+    
+    // 如果提供了缩略图文件且没有缩略图URL，则上传缩略图
+    if (thumbnailFile && !thumbnailUrl) {
+      // 上传缩略图
+      const thumbExt = thumbnailFile.name.split('.').pop();
+      const thumbName = `${Date.now()}_${Math.random().toString(36).substring(2, 15)}.${thumbExt}`;
+      const thumbPath = `${thumbName}`;
+      
+      const { error: thumbUploadError } = await supabase
+        .storage
+        .from('thumbnails')
+        .upload(thumbPath, thumbnailFile);
+      
+      if (thumbUploadError) {
+        console.error("上传缩略图失败:", thumbUploadError);
+        throw new Error("上传缩略图失败");
+      }
+      
+      // 获取缩略图公共URL
+      const { data: thumbUrlData } = await supabase
+        .storage
+        .from('thumbnails')
+        .getPublicUrl(thumbPath);
+      
+      if (!thumbUrlData) {
+        throw new Error("获取缩略图URL失败");
+      }
+      
+      thumbnailUrl = thumbUrlData.publicUrl;
+    }
+    
+    if (!thumbnailUrl) {
+      throw new Error("缺少缩略图，请上传缩略图");
+    }
+    
+    // 准备完整的模型数据
+    const newModel: Partial<Model> = {
+      ...modelData,
+      author: userData.user.id,
+      thumbnail_path: thumbnailUrl,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    };
+    
+    // 插入数据库
+    const { data: insertedModel, error: insertError } = await supabase
+      .from('models')
+      .insert(newModel)
+      .select()
+      .single();
+    
+    if (insertError || !insertedModel) {
+      console.error("插入模型数据失败:", insertError);
+      throw new Error("保存模型数据失败");
+    }
+    
+    return insertedModel as Model;
+  } catch (error) {
+    console.error("创建模型失败:", error);
+    throw error;
+  }
 } 
