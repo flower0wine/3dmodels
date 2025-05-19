@@ -14,6 +14,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Model } from "@/types/model";
 import ModelViewer from "./ModelViewer";
+import { ModelFormat } from "./loaders/ModelSelector";
 import { X, Download } from "lucide-react";
 import { download } from "@/lib/utils";
 
@@ -33,8 +34,9 @@ export default function DrawerModelViewer({
   const [environment, setEnvironment] = useState<string>("city");
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   
-  // 获取模型URL
-  const modelUrl = "/kitchen-transformed.glb";
+  // 获取模型URL和格式
+  const modelUrl = model.storage_path || "/kitchen-transformed.glb";
+  const modelFormat = (model.format?.toLowerCase() || 'glb') as ModelFormat;
   
   // 可用的环境预设
   const environments = [
@@ -118,12 +120,15 @@ export default function DrawerModelViewer({
                   </svg>
                   <h3 className="text-base sm:text-lg font-semibold text-red-800 mb-2">加载错误</h3>
                   <p className="text-sm text-red-700">{errorMessage}</p>
-                  <p className="text-xs sm:text-sm text-red-600 mt-3 sm:mt-4">请确认GLB文件是否有效</p>
+                  <p className="text-xs sm:text-sm text-red-600 mt-3 sm:mt-4">
+                    请确认{modelFormat.toUpperCase()}格式文件是否有效
+                  </p>
                 </div>
               </div>
             ) : (
               <ModelViewer 
                 modelUrl={modelUrl}
+                format={modelFormat}
                 rotationSpeed={rotationSpeed}
                 environment={environment}
                 onError={handleModelError}
