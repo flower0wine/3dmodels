@@ -125,7 +125,11 @@ export default function FormModel({ modelId }: FormModelProps) {
       );
 
       if (uploadError) {
-        throw new Error(`上传缩略图失败: ${uploadError.message}`);
+        const errorMessage = 
+          typeof uploadError === 'object' && uploadError !== null && 'message' in uploadError 
+            ? uploadError.message 
+            : '上传过程中发生错误';
+        throw new Error(`上传缩略图失败: ${errorMessage}`);
       }
       
       if (uploadResult?.publicUrl) {

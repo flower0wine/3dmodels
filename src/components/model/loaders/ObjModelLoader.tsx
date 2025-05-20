@@ -1,8 +1,8 @@
 "use client";
 
-import { useRef, useMemo, useState, useEffect } from "react";
+import { useRef, useMemo, useState } from "react";
 import { useFrame, useLoader, useThree } from "@react-three/fiber";
-import { OBJLoader } from 'three/examples/jsm/loaders/OBJLoader.js';
+import { OBJLoader } from "three/examples/jsm/loaders/OBJLoader.js";
 import * as THREE from "three";
 
 interface ObjModelLoaderProps {
@@ -20,30 +20,30 @@ export default function ObjModelLoader({
   const [error, setError] = useState<boolean>(false);
   const { camera } = useThree();
 
-  // 使用错误处理加载OBJ
-  let obj: THREE.Group | null = null;
+  // 使用useLoader加载OBJ模型
+  let objModel: THREE.Group | null = null;
   try {
-    obj = useLoader(OBJLoader, modelUrl, undefined, (error) => {
-      console.error('Error loading OBJ:', error);
+    objModel = useLoader(OBJLoader, modelUrl, undefined, (e) => {
+      console.error('加载OBJ模型失败:', e);
       setError(true);
-      if (onError) onError(`加载OBJ模型失败: ${error instanceof Error ? error.message : '未知错误'}`);
+      if (onError) onError(`加载OBJ模型失败: ${e instanceof Error ? e.message : '未知错误'}`);
     });
   } catch (e: any) {
-    console.error('Error in OBJ loading:', e);
+    console.error('加载OBJ模型出错:', e);
     setError(true);
     if (onError) onError(`加载OBJ模型失败: ${e?.message || '未知错误'}`);
   }
 
   // 如果加载失败，直接返回空
-  if (error || !obj) {
+  if (error || !objModel) {
     return null;
   }
-
+  
   // 克隆对象以避免修改原始对象
-  const model = useMemo(() => obj?.clone(), [obj]);
+  const model = useMemo(() => objModel.clone(), [objModel]);
   
   // 自动调整相机位置
-  useEffect(() => {
+  useMemo(() => {
     if (model) {
       // 计算模型的边界框
       const box = new THREE.Box3().setFromObject(model);
@@ -85,7 +85,7 @@ export default function ObjModelLoader({
 
   return (
     <group ref={groupRef}>
-      {model && <primitive object={model} scale={1} />}
+      <primitive object={model} scale={1} />
     </group>
   );
 } 

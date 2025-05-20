@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useMemo, useState, useEffect } from "react";
+import { useRef, useMemo, useState } from "react";
 import { useFrame, useThree } from "@react-three/fiber";
 import { useGLTF } from "@react-three/drei";
 import * as THREE from "three";
@@ -20,25 +20,30 @@ export default function GltfModelLoader({
   const [error, setError] = useState<boolean>(false);
   const { camera } = useThree();
 
-  // 使用错误处理加载GLTF
-  const result = useGLTF(modelUrl, true, undefined, (e: any) => {
-    console.error('Error loading GLTF:', e);
+  // 使用drei的useGLTF加载GLTF模型
+  let result: any = null;
+  try {
+    result = useGLTF(modelUrl, true, undefined, (e: any) => {
+      console.error('加载GLTF模型失败:', e);
+      setError(true);
+      if (onError) onError(`加载GLTF模型失败: ${e?.toString ? e.toString() : '未知错误'}`);
+    });
+  } catch (e: any) {
+    console.error('加载GLTF模型出错:', e);
     setError(true);
-    if (onError) onError(`加载GLTF模型失败: ${e?.message || '未知错误'}`);
-  });
+    if (onError) onError(`加载GLTF模型失败: ${e?.toString ? e.toString() : '未知错误'}`);
+  }
 
-  const { scene } = result;
-
-  // 如果加载失败，直接返回空
-  if (error || !scene) {
+  // 如果加载失败或没有场景，返回空
+  if (error || !result?.scene) {
     return null;
   }
 
-  // 克隆场景以避免修改原始对象
-  const model = useMemo(() => scene.clone(), [scene]);
+  // 获取场景并克隆以避免修改原始对象
+  const model = useMemo(() => result.scene.clone(), [result.scene]);
   
   // 自动调整相机位置
-  useEffect(() => {
+  useMemo(() => {
     if (model) {
       // 计算模型的边界框
       const box = new THREE.Box3().setFromObject(model);
@@ -83,4 +88,9 @@ export default function GltfModelLoader({
       <primitive object={model} scale={1} />
     </group>
   );
-} 
+}
+
+// 预加载模型以提高性能
+GltfModelLoader.preload = (url: string) => {
+  useGLTF.preload(url);
+}; 
