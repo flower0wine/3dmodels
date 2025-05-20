@@ -76,37 +76,27 @@ function ModelContainer({
   modelUrl, 
   format,
   rotationSpeed,
-  environment = "city",
   onError
 }: { 
   modelUrl: string,
   format?: ModelFormat,
   rotationSpeed: number,
-  environment?: string,
   onError?: (message: string) => void
 }) {
   const { width } = useWindowSize();
   const isMobile = width <= 640;
 
   return (
-    <Stage 
-      environment={environment as any} 
-      intensity={0.6} 
-      adjustCamera={false}
-      shadows={!isMobile} // 移动设备禁用阴影以提高性能
-      preset="rembrandt"
-    >
-      <Suspense fallback={<LoadingIndicator />}>
-        <Center>
-          <ModelSelector 
-            modelUrl={modelUrl} 
-            format={format}
-            rotationSpeed={rotationSpeed} 
-            onError={onError}
-          />
-        </Center>
-      </Suspense>
-    </Stage>
+    <Suspense fallback={<LoadingIndicator />}>
+      <Center>
+        <ModelSelector 
+          modelUrl={modelUrl} 
+          format={format}
+          rotationSpeed={rotationSpeed} 
+          onError={onError}
+        />
+      </Center>
+    </Suspense>
   );
 }
 
@@ -140,15 +130,15 @@ export default function ModelViewer({
         dpr={isMobile ? 1 : (isTablet ? [1, 1.5] : [1, 2])} // 根据设备类型调整DPR
         performance={{ min: 0.5 }} // 性能控制
       >
-        <ambientLight intensity={0.8} />
-        <pointLight position={[10, 10, 10]} intensity={1} />
+        {/* 环境光照 - 为整个场景提供基础照明 */}
+        <ambientLight intensity={0.3} />
+        
         <PerspectiveCamera makeDefault position={[0, 0, 6]} />
         
         <ModelContainer 
           modelUrl={modelUrl}
           format={format}
           rotationSpeed={rotationSpeed}
-          environment={environment}
           onError={handleError}
         />
         
@@ -162,6 +152,8 @@ export default function ModelViewer({
           // 移动设备上增加缩放速度
           zoomSpeed={isMobile ? 1.5 : 1}
         />
+        
+        {/* 环境贴图 - 提供环境反射和全局照明 */}
         <Environment preset={environment as any} />
         
         {/* 仅在开发模式下显示性能监控 */}
