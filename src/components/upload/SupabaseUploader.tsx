@@ -128,13 +128,12 @@ export function SupabaseUploader({
         
         // 使用服务端函数上传
         const result = await uploadFile(bucket, uniquePath, file, {
-          cacheControl: "3600",
           upsert
-        });
+        }) as any;
         
         if (result.error) {
           toast.error(`上传文件 ${file.name} 失败: ${result.error.message}`);
-          if (onUploadError) onUploadError(result.error);
+          if (onUploadError) onUploadError(result.error as Error);
         } else if (result.data) {
           // 添加到已上传文件列表
           uploadedResults.push({

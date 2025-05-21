@@ -22,7 +22,7 @@ export async function updateSession(request: NextRequest) {
           return request.cookies.getAll();
         },
         setAll(cookiesToSet) {
-          cookiesToSet.forEach(({ name, value, options }) =>
+          cookiesToSet.forEach(({ name, value }) =>
             request.cookies.set(name, value)
           );
           supabaseResponse = NextResponse.next({
@@ -38,7 +38,7 @@ export async function updateSession(request: NextRequest) {
 
   try {
     // 刷新会话，检查当前用户
-    const { data: { user }, error } = await supabase.auth.getUser();
+    const { error } = await supabase.auth.getUser();
     
     // 如果有错误，记录错误但继续
     if (error) {

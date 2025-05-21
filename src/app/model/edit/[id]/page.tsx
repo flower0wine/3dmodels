@@ -1,14 +1,12 @@
 import { HydrationBoundary, QueryClient, dehydrate } from "@tanstack/react-query";
-import { notFound } from "next/navigation";
-import { getModelById } from "@/lib/supabase/models";
 import FormModel from "@/components/form/FormModel";
 import Link from "next/link";
 import { ChevronLeft } from "lucide-react";
 
 interface EditModelPageProps {
-  params: {
+  params: Promise<{
     id: string;
-  };
+  }>;
 }
 
 export const dynamic = 'force-dynamic';
@@ -18,20 +16,6 @@ export default async function EditModelPage({ params }: EditModelPageProps) {
   
   // 预获取模型信息
   const queryClient = new QueryClient();
-  
-  // 获取模型详情
-  const model = await getModelById(id);
-  
-  // 如果模型不存在，返回404
-  if (!model) {
-    notFound();
-  }
-  
-  // 预填充查询缓存
-  await queryClient.prefetchQuery({
-    queryKey: ["model", id],
-    queryFn: () => model,
-  });
   
   return (
     <main className="min-h-screen py-6 sm:py-8">

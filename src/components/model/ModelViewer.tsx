@@ -1,19 +1,17 @@
 "use client";
 
-import { useRef, Suspense, useState, useEffect } from "react";
-import { Canvas, useThree } from "@react-three/fiber";
+import { Suspense, useState, useEffect } from "react";
+import { Canvas } from "@react-three/fiber";
 import { 
   OrbitControls, 
   PerspectiveCamera,
   Center,
   Environment,
-  Stage,
   Loader,
   useProgress,
   Html,
   Stats
 } from "@react-three/drei";
-import * as THREE from "three";
 import ModelSelector, { ModelFormat } from "./loaders/ModelSelector";
 
 interface ModelViewerProps {
@@ -83,9 +81,6 @@ function ModelContainer({
   rotationSpeed: number,
   onError?: (message: string) => void
 }) {
-  const { width } = useWindowSize();
-  const isMobile = width <= 640;
-
   return (
     <Suspense fallback={<LoadingIndicator />}>
       <Center>

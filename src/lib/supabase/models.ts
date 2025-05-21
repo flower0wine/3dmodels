@@ -13,11 +13,11 @@ import { createClient } from "@/lib/supabase/server";
 export async function getModels(
   cursor?: string, 
   limit = 10, 
-  search?: string
+  search?: string,
+  fetchUserModels = false
 ): Promise<ModelsResponse> {
   const supabase = await createClient();
-  
-  // 构建查询
+
   let query = supabase
     .from("models")
     .select("*")
@@ -27,6 +27,15 @@ export async function getModels(
   if (search && search.trim()) {
     // 使用ilike进行不区分大小写的模糊搜索
     query = query.ilike("name", `%${search.trim()}%`);
+  }
+
+  if (fetchUserModels) {
+    // 获取当前用户
+    const { data: userData } = await supabase.auth.getUser();
+    if (!userData.user) {
+      throw new Error("未登录，请先登录");
+    }
+    query = query.eq("author", userData.user.id);
   }
   
   // 添加分页

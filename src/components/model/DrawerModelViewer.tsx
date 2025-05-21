@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import {
   Drawer,
   DrawerContent,
@@ -9,7 +9,6 @@ import {
   DrawerDescription,
   DrawerFooter,
   DrawerClose,
-  DrawerOverlay,
 } from "@/components/ui/drawer";
 import { Button } from "@/components/ui/button";
 import { Model } from "@/types/model";

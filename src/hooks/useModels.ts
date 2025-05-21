@@ -7,11 +7,11 @@ import {
 } from "@/lib/supabase/models";
 
 // 获取模型列表的Hooks
-export function useModelsInfinite(initialLimit = 20, searchQuery = '') {
+export function useModelsInfinite(initialLimit = 20, searchQuery = '', fetchUserModels = false) {
   return useInfiniteQuery<ModelsResponse>({
-    queryKey: ["models", searchQuery],
+    queryKey: ["models", searchQuery, fetchUserModels],
     queryFn: ({ pageParam }) =>
-      getModels(pageParam as string | undefined, initialLimit, searchQuery),
+      getModels(pageParam as string | undefined, initialLimit, searchQuery, fetchUserModels),
     initialPageParam: undefined,
     getNextPageParam: (lastPage) => lastPage.nextCursor,
     staleTime: 1000 * 60 * 5, // 5分钟

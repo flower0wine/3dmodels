@@ -4,7 +4,6 @@ import { useEffect, useState } from "react";
 import { useInView } from 'react-intersection-observer';
 import Masonry, { ResponsiveMasonry } from "react-responsive-masonry";
 import { useModelsInfinite } from "@/hooks/useModels";
-import { useUserModelsInfinite } from "@/hooks/useUserModels";
 import CardModel from "@/components/card/CardModel";
 import SkeletonGrid from "@/components/skeleton/SkeletonGrid";
 import ModelSearch from "@/components/search/ModelSearch";
@@ -27,9 +26,7 @@ export default function GridModelMasonry({ isUserModels = false }: GridModelMaso
     isError,
     error,
     refetch
-  } = isUserModels 
-    ? useUserModelsInfinite(20, searchQuery)
-    : useModelsInfinite(20, searchQuery);
+  } = useModelsInfinite(20, searchQuery, isUserModels);
 
   const { ref, inView } = useInView({
     threshold: 0,

@@ -80,7 +80,7 @@ function LoadingError({ message }: { message: string }) {
 }
 
 // 错误边界回退组件
-function ModelErrorFallback({ error, resetErrorBoundary }: FallbackProps) {
+function ModelErrorFallback({ error }: FallbackProps) {
   return (
     <LoadingError message={`模型加载失败: ${error.message || '未知错误'}`} />
   );
