@@ -384,4 +384,56 @@ export async function createModel(
     console.error("创建模型失败:", error);
     throw error;
   }
+}
+
+/**
+ * 获取当前用户的模型列表
+ * @param cursor 分页游标
+ * @param limit 每页数量
+ * @param search 搜索关键词，用于按名称搜索
+ * @returns 模型列表和下一页游标
+ */
+export async function getUserModels(
+  cursor?: string, 
+  limit = 10, 
+  search?: string
+): Promise<ModelsResponse> {
+  const supabase = await createClient();
+  
+  // 获取当前用户
+  const { data: userData } = await supabase.auth.getUser();
+  if (!userData.user) {
+    throw new Error("未登录，请先登录");
+  }
+  
+  // 构建查询
+  let query = supabase
+    .from("models")
+    .select("*")
+    .eq("author", userData.user.id)
+    .order("created_at", { ascending: false });
+  
+  // 如果有搜索关键词，添加搜索条件
+  if (search && search.trim()) {
+    // 使用ilike进行不区分大小写的模糊搜索
+    query = query.ilike("name", `%${search.trim()}%`);
+  }
+  
+  // 添加分页
+  query = query.limit(limit);
+  
+  if (cursor) {
+    query = query.lt("created_at", cursor);
+  }
+
+  const { data, error } = await query;
+
+  if (error) {
+    console.error("获取用户模型失败:", error);
+    throw error;
+  }
+
+  const nextCursor = data.length === limit ? data[data.length - 1]?.created_at : null;
+
+  return { models: data as Model[], nextCursor };
 } 

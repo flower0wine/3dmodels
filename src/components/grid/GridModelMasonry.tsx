@@ -4,14 +4,20 @@ import { useEffect, useState } from "react";
 import { useInView } from 'react-intersection-observer';
 import Masonry, { ResponsiveMasonry } from "react-responsive-masonry";
 import { useModelsInfinite } from "@/hooks/useModels";
+import { useUserModelsInfinite } from "@/hooks/useUserModels";
 import CardModel from "@/components/card/CardModel";
 import SkeletonGrid from "@/components/skeleton/SkeletonGrid";
 import ModelSearch from "@/components/search/ModelSearch";
 
-export default function GridModelMasonry() {
+interface GridModelMasonryProps {
+  isUserModels?: boolean;
+}
+
+export default function GridModelMasonry({ isUserModels = false }: GridModelMasonryProps) {
   // 搜索状态
   const [searchQuery, setSearchQuery] = useState("");
   
+  // 根据isUserModels选择使用哪个查询hook
   const { 
     data, 
     fetchNextPage, 
@@ -21,7 +27,9 @@ export default function GridModelMasonry() {
     isError,
     error,
     refetch
-  } = useModelsInfinite(20, searchQuery);
+  } = isUserModels 
+    ? useUserModelsInfinite(20, searchQuery)
+    : useModelsInfinite(20, searchQuery);
 
   const { ref, inView } = useInView({
     threshold: 0,
@@ -51,7 +59,7 @@ export default function GridModelMasonry() {
       <div className="px-4 sm:px-6 lg:px-8 mb-6 sm:mb-8">
         <div className="max-w-xs sm:max-w-sm md:max-w-md mx-auto">
           <ModelSearch 
-            placeholder="搜索模型名称..." 
+            placeholder={isUserModels ? "搜索我的模型..." : "搜索模型名称..."} 
             onSearch={handleSearch}
             className="w-full"
           />
@@ -94,7 +102,11 @@ export default function GridModelMasonry() {
         <div className="px-2 sm:px-4 md:px-6 lg:px-8">
           <div className="text-center py-12">
             <p className="text-gray-500 dark:text-gray-400">
-              {searchQuery ? `没有找到与"${searchQuery}"相关的模型` : '暂无模型数据'}
+              {searchQuery 
+                ? `没有找到与"${searchQuery}"相关的模型` 
+                : isUserModels 
+                  ? '您还没有上传任何模型' 
+                  : '暂无模型数据'}
             </p>
           </div>
         </div>
@@ -117,7 +129,11 @@ export default function GridModelMasonry() {
           >
             <Masonry gutter="16px" className="!w-full">
               {allModels.map(model => (
-                <CardModel key={model.id} model={model} />
+                <CardModel 
+                  key={model.id} 
+                  model={model}
+                  showEditButton={isUserModels}
+                />
               ))}
             </Masonry>
           </ResponsiveMasonry>

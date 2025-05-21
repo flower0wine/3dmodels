@@ -13,7 +13,6 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { NavbarUserAvatar } from "./NavbarUserAvatar";
 import LogoutButton from "@/components/auth/LogoutButton";
-import { PersonIcon, GearIcon, ExitIcon, RocketIcon } from "@radix-ui/react-icons";
 
 interface NavbarUserMenuProps {
   user: User | null;
@@ -38,20 +37,20 @@ export const NavbarUserMenu: React.FC<NavbarUserMenuProps> = ({
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
         <DropdownMenuItem asChild>
-          <Link href="/profile" className="cursor-pointer flex w-full items-center">
-            <PersonIcon className="mr-2 h-4 w-4" />
-            <span>个人资料</span>
+          <Link href="/models" className="cursor-pointer flex w-full items-center">
+            <span className="mr-2 h-4 w-4 icon-[mage--box-3d-scan]" />
+            <span>我的模型</span>
           </Link>
         </DropdownMenuItem>
         <DropdownMenuItem asChild>
           <Link href="/dashboard" className="cursor-pointer flex w-full items-center">
-            <RocketIcon className="mr-2 h-4 w-4" />
+            <span className="mr-2 h-4 w-4 icon-[mage--dashboard]" />
             <span>控制台</span>
           </Link>
         </DropdownMenuItem>
         <DropdownMenuItem asChild>
           <Link href="/settings" className="cursor-pointer flex w-full items-center">
-            <GearIcon className="mr-2 h-4 w-4" />
+            <span className="mr-2 h-4 w-4 icon-[mage--settings]" />
             <span>设置</span>
           </Link>
         </DropdownMenuItem>

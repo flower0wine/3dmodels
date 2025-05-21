@@ -50,7 +50,10 @@ export default function LogoutButton({
           登出中...
         </>
       ) : (
-        "退出登录"
+        <>
+          <span className="icon-[ci--exit] mr-2 h-4 w-4" />
+          退出登录
+        </>
       )}
     </Button>
   );
