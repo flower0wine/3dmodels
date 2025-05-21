@@ -37,21 +37,9 @@ export const NavbarUserMenu: React.FC<NavbarUserMenuProps> = ({
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
         <DropdownMenuItem asChild>
-          <Link href="/models" className="cursor-pointer flex w-full items-center">
+          <Link href="/model" className="cursor-pointer flex w-full items-center">
             <span className="mr-2 h-4 w-4 icon-[mage--box-3d-scan]" />
             <span>我的模型</span>
-          </Link>
-        </DropdownMenuItem>
-        <DropdownMenuItem asChild>
-          <Link href="/dashboard" className="cursor-pointer flex w-full items-center">
-            <span className="mr-2 h-4 w-4 icon-[mage--dashboard]" />
-            <span>控制台</span>
-          </Link>
-        </DropdownMenuItem>
-        <DropdownMenuItem asChild>
-          <Link href="/settings" className="cursor-pointer flex w-full items-center">
-            <span className="mr-2 h-4 w-4 icon-[mage--settings]" />
-            <span>设置</span>
           </Link>
         </DropdownMenuItem>
         <DropdownMenuSeparator />
