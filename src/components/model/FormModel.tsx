@@ -145,8 +145,6 @@ export default function FormModel({ modelId }: FormModelProps) {
       setUploadingType("thumbnail");
       const uniquePath = generateUniqueFilePath(file.name);
 
-      toast.loading("正在上传缩略图...");
-
       const { data: uploadResult, error: uploadError } = await uploadFile(
         "thumbnails",
         uniquePath,
@@ -310,10 +308,6 @@ export default function FormModel({ modelId }: FormModelProps) {
       setIsSubmitting(false);
     }
   };
-
-  if (!model) {
-    return notFound();
-  }
 
   // 如果正在加载或发生错误(编辑模式)
   if (isEditMode && isLoading) {

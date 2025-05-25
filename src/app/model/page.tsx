@@ -1,5 +1,5 @@
 import { HydrationBoundary, dehydrate, QueryClient } from "@tanstack/react-query";
-import GridModelMasonry from "@/components/grid/GridModelMasonry";
+import GridModelMasonry from "@/components/model/GridModelMasonry";
 import Link from "next/link";
 import { ChevronLeft } from "lucide-react";
 

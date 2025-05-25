@@ -8,14 +8,30 @@ import {
   DrawerTitle,
   DrawerDescription,
   DrawerFooter,
-  DrawerClose,
 } from "@/components/ui/drawer";
 import { Button } from "@/components/ui/button";
 import { Model } from "@/types/model";
 import ModelViewer from "./ModelViewer";
 import { ModelFormat } from "./loaders/ModelSelector";
-import { X, Download } from "lucide-react";
+import { X, Download, Palette } from "lucide-react";
 import { download } from "@/lib/utils";
+
+// 导入环境预设类型
+type EnvironmentPreset = "sunset" | "dawn" | "night" | "warehouse" | "forest" | "apartment" | "studio" | "city" | "park" | "lobby";
+
+// 环境预设选项
+const environmentPresets: { value: EnvironmentPreset; label: string }[] = [
+  { value: "city", label: "城市" },
+  { value: "sunset", label: "日落" },
+  { value: "dawn", label: "黎明" },
+  { value: "night", label: "夜晚" },
+  { value: "warehouse", label: "仓库" },
+  { value: "forest", label: "森林" },
+  { value: "apartment", label: "公寓" },
+  { value: "studio", label: "工作室" },
+  { value: "park", label: "公园" },
+  { value: "lobby", label: "大厅" },
+];
 
 interface DrawerModelViewerProps {
   model: Model;
@@ -29,35 +45,17 @@ export default function DrawerModelViewer({
   onOpenChange
 }: DrawerModelViewerProps) {
   // 状态管理
-  const [rotationSpeed, setRotationSpeed] = useState(0.01);
-  const [environment, setEnvironment] = useState<string>("city");
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [environment, setEnvironment] = useState<EnvironmentPreset>("city");
+  const [showEnvironmentSelector, setShowEnvironmentSelector] = useState(false);
   
   // 获取模型URL和格式
   const modelUrl = model.storage_path || "/kitchen-transformed.glb";
   const modelFormat = (model.format?.toLowerCase() || 'glb') as ModelFormat;
   
-  // 可用的环境预设
-  const environments = [
-    { id: "city", name: "城市" },
-    { id: "dawn", name: "黎明" },
-    { id: "sunset", name: "日落" },
-    { id: "night", name: "夜晚" },
-    { id: "warehouse", name: "仓库" },
-    { id: "forest", name: "森林" },
-    { id: "park", name: "公园" }
-  ];
-  
-  // 切换环境
-  const cycleEnvironment = () => {
-    const currentIndex = environments.findIndex(env => env.id === environment);
-    const nextIndex = (currentIndex + 1) % environments.length;
-    setEnvironment(environments[nextIndex].id);
-  };
-  
   // 处理模型加载错误
-  const handleModelError = (message: string) => {
-    setErrorMessage(message);
+  const handleModelError = (error: Error) => {
+    setErrorMessage(error.message);
   };
 
   // 处理空白处点击关闭
@@ -66,6 +64,17 @@ export default function DrawerModelViewer({
     if (e.target === e.currentTarget) {
       onOpenChange(false);
     }
+  };
+
+  // 切换环境选择器显示状态
+  const toggleEnvironmentSelector = () => {
+    setShowEnvironmentSelector(prev => !prev);
+  };
+
+  // 选择环境预设
+  const selectEnvironment = (preset: EnvironmentPreset) => {
+    setEnvironment(preset);
+    setShowEnvironmentSelector(false);
   };
 
   return (
@@ -98,16 +107,6 @@ export default function DrawerModelViewer({
             <DrawerDescription className="text-xs sm:text-sm">
               {model.description || '3D模型预览'} - 作者: {model.author}
             </DrawerDescription>
-            
-            <div className="mt-2 p-2 sm:p-3 bg-blue-50 dark:bg-blue-950 rounded-md text-xs">
-              <p className="font-semibold mb-1">操作指南:</p>
-              <ul className="list-disc pl-4 sm:pl-5 space-y-1 text-xs sm:text-sm">
-                <li>鼠标左键拖动: 旋转模型</li>
-                <li>鼠标滚轮: 缩放模型</li>
-                <li>鼠标右键拖动: 平移视图</li>
-                <li>双击: 重置视图</li>
-              </ul>
-            </div>
           </DrawerHeader>
           
           <div className="p-2 sm:p-4 h-[50vh] sm:h-[55vh] md:h-[60vh] relative">
@@ -128,7 +127,6 @@ export default function DrawerModelViewer({
               <ModelViewer 
                 modelUrl={modelUrl}
                 format={modelFormat}
-                rotationSpeed={rotationSpeed}
                 environment={environment}
                 onError={handleModelError}
               />
@@ -137,26 +135,38 @@ export default function DrawerModelViewer({
           
           <DrawerFooter className="flex flex-col p-4 sm:p-6">
             <div className="flex flex-wrap gap-1.5 sm:gap-2 mb-2">
-              <Button 
-                variant="outline"
-                onClick={() => setRotationSpeed(prevSpeed => 
-                  prevSpeed === 0.01 ? 0.03 : (prevSpeed === 0.03 ? 0 : 0.01)
+              {/* 场景切换按钮 */}
+              <div className="relative">
+                <Button 
+                  variant="outline"
+                  onClick={toggleEnvironmentSelector}
+                  size="sm"
+                  className="text-xs sm:text-sm px-2 py-1 h-auto sm:h-9 text-purple-600 dark:text-purple-400 border-purple-200 dark:border-purple-800 hover:bg-purple-50 dark:hover:bg-purple-950"
+                >
+                  <Palette size={14} className="mr-1" />
+                  切换场景
+                </Button>
+                
+                {/* 环境预设选择器 - 显示在按钮上方 */}
+                {showEnvironmentSelector && (
+                  <div className="absolute z-50 bottom-full mb-1 w-48 bg-white dark:bg-gray-800 rounded-md shadow-lg overflow-hidden border border-gray-200 dark:border-gray-700">
+                    <div className="py-1 max-h-64 overflow-y-auto">
+                      {environmentPresets.map((preset) => (
+                        <button
+                          key={preset.value}
+                          className={`w-full text-left px-4 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-700 ${
+                            environment === preset.value ? 'bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400' : ''
+                          }`}
+                          onClick={() => selectEnvironment(preset.value)}
+                        >
+                          {preset.label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
                 )}
-                size="sm"
-                className="text-xs sm:text-sm px-2 py-1 h-auto sm:h-9"
-              >
-                {rotationSpeed === 0 ? "开始旋转" : (rotationSpeed === 0.01 ? "加快旋转" : "停止旋转")}
-              </Button>
-              
-              <Button 
-                variant="outline"
-                onClick={cycleEnvironment}
-                size="sm"
-                className="text-xs sm:text-sm px-2 py-1 h-auto sm:h-9"
-              >
-                环境: {environments.find(env => env.id === environment)?.name || "默认"}
-              </Button>
-              
+              </div>
+
               {errorMessage && (
                 <Button 
                   variant="outline"
@@ -182,16 +192,10 @@ export default function DrawerModelViewer({
             </div>
             
             <div className="flex justify-between w-full items-center mt-2">
-              <span className="text-xs text-gray-500">模型格式: {model.format.toUpperCase()}</span>
-              <DrawerClose asChild>
-                <Button 
-                  variant="outline" 
-                  size="sm"
-                  className="text-xs sm:text-sm"
-                >
-                  关闭
-                </Button>
-              </DrawerClose>
+              <span className="text-xs text-gray-500">
+                模型格式: {model.format.toUpperCase()} | 
+                场景: {environmentPresets.find(p => p.value === environment)?.label || "城市"}
+              </span>
             </div>
           </DrawerFooter>
         </DrawerContent>

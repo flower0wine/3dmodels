@@ -1,5 +1,5 @@
 import { HydrationBoundary, dehydrate, QueryClient } from "@tanstack/react-query";
-import GridModelMasonry from "@/components/grid/GridModelMasonry";
+import GridModelMasonry from "@/components/model/GridModelMasonry";
 
 export const dynamic = 'force-dynamic';
 

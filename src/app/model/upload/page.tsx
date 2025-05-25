@@ -1,5 +1,5 @@
 import { HydrationBoundary, QueryClient, dehydrate } from "@tanstack/react-query";
-import FormModel from "@/components/form/FormModel";
+import FormModel from "@/components/model/FormModel";
 import Link from "next/link";
 import { ChevronLeft } from "lucide-react";
 

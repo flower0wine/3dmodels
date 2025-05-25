@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useInView } from 'react-intersection-observer';
 import Masonry, { ResponsiveMasonry } from "react-responsive-masonry";
 import { useModelsInfinite } from "@/hooks/useModels";
-import CardModel from "@/components/card/CardModel";
+import CardModel from "@/components/model/CardModel";
 import SkeletonGrid from "@/components/skeleton/SkeletonGrid";
 import ModelSearch from "@/components/search/ModelSearch";
 
