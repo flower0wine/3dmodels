@@ -1,7 +1,6 @@
 "use client";
 
 import React, { useRef, useEffect, useState } from "react";
-import { useFBX } from '@react-three/drei';
 import { FBXLoader } from 'three/examples/jsm/loaders/FBXLoader.js';
 import * as THREE from "three";
 
@@ -24,7 +23,6 @@ export default function FbxModelLoader({
 }: FbxModelLoaderProps) {
   const groupRef = useRef<THREE.Group>(null);
   const [model, setModel] = useState<THREE.Group | null>(null);
-  const { scene } = useFBX(modelUrl);
   
   // 加载FBX模型
   useEffect(() => {
@@ -125,5 +123,5 @@ export default function FbxModelLoader({
     };
   }, [modelUrl, scale, position]);
 
-  return <group ref={groupRef}>{scene && <primitive object={scene} />}</group>;
+  return <group ref={groupRef}>{model && <primitive object={model} />}</group>;
 }
