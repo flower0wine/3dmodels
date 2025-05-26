@@ -300,7 +300,7 @@ export default function FormModel({ modelId }: FormModelProps) {
       await deleteModel(modelId);
       toast.success("模型已成功删除");
       router.refresh();
-      router.push("/");
+      router.push("/model");
     } catch (error: any) {
       console.error("删除模型失败:", error);
       toast.error(error.message || "删除模型失败");

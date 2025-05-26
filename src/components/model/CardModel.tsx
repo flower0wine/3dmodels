@@ -5,8 +5,12 @@ import Image from "next/image";
 import { Model } from "@/types/model";
 import DrawerModelViewer from "@/components/model/DrawerModelViewer";
 import { Button } from "@/components/ui/button";
-import { Pencil } from "lucide-react";
+import { Pencil, Trash2 } from "lucide-react";
 import Link from "next/link";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
+import { toast } from "sonner";
+import { deleteModel } from "@/lib/supabase/models";
+import { useRouter } from "next/navigation";
 
 interface CardModelProps {
   model: Model;
@@ -15,6 +19,23 @@ interface CardModelProps {
 
 export default function CardModel({ model, showEditButton = false }: CardModelProps) {
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const router = useRouter();
+
+  // 处理删除模型
+  const handleDeleteModel = async () => {
+    try {
+      setIsDeleting(true);
+      await deleteModel(model.id);
+      toast.success("模型已成功删除");
+      router.refresh();
+    } catch (error: any) {
+      console.error("删除模型失败:", error);
+      toast.error(error.message || "删除模型失败");
+    } finally {
+      setIsDeleting(false);
+    }
+  };
 
   return (
     <>
@@ -33,9 +54,42 @@ export default function CardModel({ model, showEditButton = false }: CardModelPr
           />
           {showEditButton && (
             <div 
-              className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-all duration-200"
+              className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-all duration-200 flex gap-2"
               onClick={(e) => e.stopPropagation()}
             >
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    className="bg-black/60 hover:bg-red-600/80 text-white border-none gap-1.5"
+                    disabled={isDeleting}
+                  >
+                    <Trash2 className="h-3.5 w-3.5" />
+                    <span className="text-xs">删除</span>
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>
+                      确定要删除这个模型吗？
+                    </AlertDialogTitle>
+                    <AlertDialogDescription>
+                      此操作不可逆，删除后模型数据将无法恢复。
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>取消</AlertDialogCancel>
+                    <AlertDialogAction
+                      onClick={handleDeleteModel}
+                      className="bg-red-500 hover:bg-red-600 text-white"
+                    >
+                      {isDeleting ? "删除中..." : "确认删除"}
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+
               <Link href={`/model/edit/${model.id}`}>
                 <Button
                   variant="secondary"
