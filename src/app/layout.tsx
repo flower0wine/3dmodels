@@ -37,7 +37,7 @@ export default async function RootLayout({
       >
         <Navbar 
           user={user} 
-          logoSrc="/window.svg" 
+          logoSrc="/logo.png" 
           logoAlt="3D Show Logo" 
         />
         <main>
