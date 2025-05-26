@@ -48,37 +48,6 @@ function useWindowSize() {
   return size;
 }
 
-// WebGL上下文监控组件
-function WebGLContextMonitor({ onError }: { onError?: (error: Error) => void }) {
-  const { gl } = useThree();
-  
-  useEffect(() => {
-    // 监听WebGL上下文丢失事件
-    const handleContextLost = (event: Event) => {
-      event.preventDefault();
-      console.warn('WebGL上下文丢失');
-      if (onError) onError(new Error('WebGL上下文丢失，请刷新页面'));
-    };
-    
-    // 监听WebGL上下文恢复事件
-    const handleContextRestored = () => {
-      console.log('WebGL上下文已恢复');
-    };
-    
-    // 获取WebGL画布
-    const canvas = gl.domElement;
-    canvas.addEventListener('webglcontextlost', handleContextLost as EventListener, false);
-    canvas.addEventListener('webglcontextrestored', handleContextRestored, false);
-    
-    return () => {
-      canvas.removeEventListener('webglcontextlost', handleContextLost as EventListener);
-      canvas.removeEventListener('webglcontextrestored', handleContextRestored);
-    };
-  }, [gl, onError]);
-  
-  return null;
-}
-
 // 场景设置组件
 function SceneSetup({ 
   environment = "city"
@@ -108,7 +77,6 @@ function SceneSetup({
         castShadow
       />
       
-      {/* 环境光照 - 设置background={false}避免替换背景 */}
       <Environment preset={environment} background={true} />
     </>
   );
@@ -158,12 +126,6 @@ export default function ModelViewer({
   // 使用ref跟踪Canvas实例
   const canvasRef = useRef<HTMLCanvasElement>(null);
   
-  // 处理WebGL错误
-  const handleWebGLError = (error: Error) => {
-    console.error('WebGL错误:', error);
-    if (onError) onError(error);
-  };
-  
   // 处理模型加载进度
   const handleModelProgress = (progress: number) => {
     setLoadingProgress(progress);
@@ -200,8 +162,6 @@ export default function ModelViewer({
           antialias: !isMobile, // 移动设备禁用抗锯齿提高性能
           powerPreference: 'high-performance', 
           alpha: false, // 禁用透明度以确保背景色显示
-          preserveDrawingBuffer: true, // 帮助处理上下文丢失
-          failIfMajorPerformanceCaveat: false // 即使性能不佳也尝试创建上下文
         }}
         dpr={isMobile ? 1 : (isTablet ? [1, 1.5] : [1, 2])} // 根据设备类型调整DPR
         performance={{ min: 0.5 }} // 性能控制
@@ -213,9 +173,6 @@ export default function ModelViewer({
           gl.setPixelRatio(Math.min(window.devicePixelRatio, 2));
         }}
       >
-        {/* WebGL上下文监控 */}
-        <WebGLContextMonitor onError={handleWebGLError} />
-        
         {/* 场景设置 */}
         <SceneSetup environment={environment} />
         

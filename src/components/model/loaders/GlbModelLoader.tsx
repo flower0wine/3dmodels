@@ -1,11 +1,11 @@
 "use client";
 
 import React, { useRef, useEffect, useState } from "react";
-import { useFBX } from '@react-three/drei';
-import { FBXLoader } from 'three/examples/jsm/loaders/FBXLoader.js';
+import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
+import { DRACOLoader } from 'three/examples/jsm/loaders/DRACOLoader.js';
 import * as THREE from "three";
 
-interface FbxModelLoaderProps {
+interface GlbModelLoaderProps {
   modelUrl: string;
   scale?: number | [number, number, number];
   position?: [number, number, number];
@@ -14,19 +14,18 @@ interface FbxModelLoaderProps {
   onError?: (error: Error) => void;
 }
 
-export default function FbxModelLoader({
+export default function GlbModelLoader({
   modelUrl,
   scale,
   position,
   onLoaded,
   onProgress,
   onError
-}: FbxModelLoaderProps) {
+}: GlbModelLoaderProps) {
   const groupRef = useRef<THREE.Group>(null);
   const [model, setModel] = useState<THREE.Group | null>(null);
-  const { scene } = useFBX(modelUrl);
   
-  // 加载FBX模型
+  // 加载GLB模型
   useEffect(() => {
     // 重置状态
     setModel(null);
@@ -35,37 +34,44 @@ export default function FbxModelLoader({
     if (onProgress) onProgress(0);
     
     // 创建新的加载器并加载模型
-    const loader = new FBXLoader();
+    const loader = new GLTFLoader();
+    
+    // 添加DRACO解码器以支持压缩的GLB模型
+    const dracoLoader = new DRACOLoader();
+    dracoLoader.setDecoderPath('/draco/');
+    loader.setDRACOLoader(dracoLoader);
     
     loader.load(
       modelUrl,
-      (fbx: THREE.Group) => {
-        // 使用原始的简单缩放方法
-        fbx.scale.set(0.01, 0.01, 0.01);
+      (gltf) => {
+        const scene = gltf.scene;
+        
+        // 默认缩放
+        scene.scale.set(1, 1, 1);
         
         // 如果提供了自定义缩放，则使用它
         if (scale) {
           if (Array.isArray(scale)) {
-            fbx.scale.set(scale[0], scale[1], scale[2]);
+            scene.scale.set(scale[0], scale[1], scale[2]);
           } else {
-            fbx.scale.set(scale, scale, scale);
+            scene.scale.set(scale, scale, scale);
           }
         }
         
         // 如果提供了自定义位置，则使用它
         if (position) {
-          fbx.position.set(position[0], position[1], position[2]);
+          scene.position.set(position[0], position[1], position[2]);
         } else {
-          fbx.position.set(0, 0, 0);
+          scene.position.set(0, 0, 0);
         }
         
         // 为所有的网格设置接收阴影和投射阴影
-        fbx.traverse((child) => {
+        scene.traverse((child) => {
           if (child instanceof THREE.Mesh) {
             child.castShadow = true;
             child.receiveShadow = true;
             
-            // 增强材质对比度
+            // 确保材质正确更新
             if (child.material) {
               if (Array.isArray(child.material)) {
                 child.material.forEach(mat => {
@@ -81,28 +87,30 @@ export default function FbxModelLoader({
         });
         
         // 更新状态
-        setModel(fbx);
+        setModel(scene);
         
         // 加载完成，进度为100%
         if (onProgress) onProgress(100);
         
         // 调用回调
         if (onLoaded) {
-          onLoaded(fbx);
+          onLoaded(scene);
         }
       },
       // 进度回调
       (xhr) => {
-        const progress = Math.min(100, Math.round((xhr.loaded / xhr.total) * 100));
-        console.log(`${progress}% loaded`);
-        
-        // 传递加载进度给父组件
-        if (onProgress) onProgress(progress);
+        if (xhr.lengthComputable) {
+          const progress = Math.min(100, Math.round((xhr.loaded / xhr.total) * 100));
+          console.log(`${progress}% loaded`);
+          
+          // 传递加载进度给父组件
+          if (onProgress) onProgress(progress);
+        }
       },
       // 错误回调
       (error) => {
-        console.error('加载FBX模型失败:', error);
-        if (onError) onError(error as Error);
+        console.error('加载GLB模型失败:', error);
+        if (onError) onError(new Error(error instanceof Error ? error.message : String(error)));
       }
     );
 
@@ -122,8 +130,11 @@ export default function FbxModelLoader({
           }
         });
       }
+      
+      // 释放DRACO解码器
+      dracoLoader.dispose();
     };
   }, [modelUrl, scale, position]);
 
-  return <group ref={groupRef}>{scene && <primitive object={scene} />}</group>;
-}
+  return <group ref={groupRef}>{model && <primitive object={model} />}</group>;
+} 
