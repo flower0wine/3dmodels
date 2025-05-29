@@ -425,12 +425,12 @@ export default function FormModel({ modelId }: FormModelProps) {
                       onClick={handleThumbnailClick}
                     >
                       {thumbnailPreview ||
-                      (isEditMode && model?.thumbnail_path) ? (
+                      (isEditMode && model?.thumbnail_url) ? (
                         <div className="relative w-full h-full">
                           <Image
                             src={
                               thumbnailPreview ||
-                              (isEditMode ? model?.thumbnail_path || "" : "")
+                              (isEditMode ? model?.thumbnail_url || "" : "")
                             }
                             alt="缩略图预览"
                             fill

@@ -204,29 +204,19 @@ export async function deleteModel(id: string): Promise<void> {
     throw new Error("无权删除此模型");
   }
   
-  // 从存储中删除文件
-  // 直接使用存储路径删除文件，而不是从URL提取
-  console.log(model);
-  
   // 删除模型文件
   if (model.storage_path) {
-    console.log("删除模型文件:", model.storage_path);
-    
     const { error: deleteError } = await supabase.storage.from('models').remove([model.storage_path]);
     if (deleteError) {
       console.error("删除模型文件失败:", deleteError);
-      throw new Error("删除模型文件失败");
     }
   }
   
   // 删除缩略图
   if (model.thumbnail_path) {
-    console.log("删除缩略图:", model.thumbnail_path);
-    
     const { error: deleteError } = await supabase.storage.from('thumbnails').remove([model.thumbnail_path]);
     if (deleteError) {
       console.error("删除缩略图失败:", deleteError);
-      throw new Error("删除缩略图失败");
     }
   }
   
