@@ -21,9 +21,6 @@ CREATE TABLE models (
   -- 存储URL，必填
   storage_url TEXT NOT NULL,
   
-  -- 分类，可选
-  category TEXT,
-  
   -- 创建时间，自动设置当前时间
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW() NOT NULL,
   
@@ -82,5 +79,4 @@ USING (auth.uid() = user_id);
 -- 创建索引以提高查询性能
 CREATE INDEX idx_models_user_id ON models(user_id);
 CREATE INDEX idx_models_created_at ON models(created_at);
-CREATE INDEX idx_models_category ON models(category);
 CREATE INDEX idx_models_format ON models(format);

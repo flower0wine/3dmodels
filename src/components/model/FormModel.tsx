@@ -8,7 +8,6 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import Image from "next/image";
 import { toast } from "sonner";
-
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
@@ -16,18 +15,20 @@ import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
-import { Trash2, UploadCloud, Save, XCircle, FileEdit } from "lucide-react";
 import { UppyFileUploader } from "@/components/upload/UppyFileUploader";
-
+import { TagSelector } from "@/components/tag/TagSelector";
+import { TagGroup } from "@/components/tag/TagGroup";
+import { useModelTags } from "@/hooks/useModelTags";
+import { Trash2, UploadCloud, Save, XCircle, FileEdit, Tag } from "lucide-react";
 import { uploadFile } from "@/lib/supabase/storage";
 import { updateModel, deleteModel, createModel } from "@/lib/supabase/models";
+import { updateModelTags } from "@/lib/supabase/model-tags";
 import { generateUniqueFilePath } from "@/lib/utils";
 
 // 表单验证schema
 const modelFormSchema = z.object({
   name: z.string().min(2, "名称至少需要2个字符").max(100, "名称不能超过100个字符"),
   description: z.string().max(500, "描述不能超过500个字符").optional(),
-  category: z.string().max(50, "分类不能超过50个字符").optional(),
 });
 
 type ModelFormValues = z.infer<typeof modelFormSchema>;
@@ -42,6 +43,15 @@ export default function FormModel({ modelId }: FormModelProps) {
 
   // 获取模型数据(编辑模式)
   const { data: model, isLoading, error } = useModel(modelId || "");
+  
+  // 标签选择器状态
+  const [isTagSelectorOpen, setIsTagSelectorOpen] = useState(false);
+  
+  // 获取模型标签(编辑模式)
+  const { tags: modelTags, isLoading: isTagsLoading } = useModelTags(modelId || "");
+  
+  // 新创建模型的临时标签列表
+  const [tempTags, setTempTags] = useState<string[]>([]);
 
   // 文件上传状态
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -76,13 +86,11 @@ export default function FormModel({ modelId }: FormModelProps) {
     defaultValues: {
       name: isEditMode ? model?.name || "" : "",
       description: isEditMode ? model?.description || "" : "",
-      category: isEditMode ? model?.category || "" : "",
     },
     values: isEditMode
       ? {
           name: model?.name || "",
           description: model?.description || "",
-          category: model?.category || "",
         }
       : undefined,
   });
@@ -221,7 +229,6 @@ export default function FormModel({ modelId }: FormModelProps) {
       const modelData = {
         name: values.name,
         description: values.description || "",
-        category: values.category || "",
         thumbnail_url: uploadedThumbnail.url,
         thumbnail_path: uploadedThumbnail.path,
         storage_url: uploadedModelFile.url,
@@ -231,7 +238,18 @@ export default function FormModel({ modelId }: FormModelProps) {
       };
 
       // 创建新模型
-      await createModel(modelData);
+      const createdModel = await createModel(modelData);
+      setUploadProgress(80);
+      
+      // 如果有临时标签，为新创建的模型添加标签
+      if (tempTags.length > 0 && createdModel?.id) {
+        try {
+          await updateModelTags(createdModel.id, tempTags);
+        } catch (tagError) {
+          console.error("添加标签失败:", tagError);
+          toast.error("模型创建成功，但标签添加失败");
+        }
+      }
 
       setUploadProgress(100);
       toast.success("模型上传成功");
@@ -261,7 +279,6 @@ export default function FormModel({ modelId }: FormModelProps) {
       const updateData: Record<string, any> = {
         name: values.name,
         description: values.description || null,
-        category: values.category || null,
       };
 
       // 添加新的缩略图（如果有）
@@ -391,27 +408,45 @@ export default function FormModel({ modelId }: FormModelProps) {
                   </FormItem>
                 )}
               />
-
-              <FormField
-                control={form.control}
-                name="category"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>分类</FormLabel>
-                    <FormControl>
-                      <Input
-                        placeholder="输入模型分类（可选）"
-                        {...field}
-                        disabled={isSubmitting}
-                      />
-                    </FormControl>
-                    <FormDescription>
-                      为模型添加一个分类，便于管理和查找
-                    </FormDescription>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+              
+              {/* 标签选择 */}
+              <div>
+                <FormLabel className="block mb-2">标签</FormLabel>
+                <FormDescription>
+                  为模型添加标签，方便分类和查找
+                </FormDescription>
+                <div className="space-y-3">
+                  {isEditMode ? (
+                    // 编辑模式下显示已有标签
+                    <div className="mb-2">
+                      {isTagsLoading ? (
+                        <div className="text-sm text-muted-foreground">加载标签中...</div>
+                      ) : (
+                        <TagGroup 
+                          tags={modelTags} 
+                          emptyText="暂无标签"
+                        />
+                      )}
+                    </div>
+                  ) : tempTags.length > 0 ? (
+                    // 创建模式下显示临时选择的标签ID列表
+                    <div className="mb-2 text-sm text-muted-foreground">
+                      已选择 {tempTags.length} 个标签
+                    </div>
+                  ) : null}
+                  
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="flex items-center gap-1"
+                    onClick={() => setIsTagSelectorOpen(true)}
+                  >
+                    <Tag className="h-4 w-4" />
+                    {isEditMode ? "管理标签" : "添加标签"}
+                  </Button>
+                </div>
+              </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {/* 缩略图上传 */}
@@ -670,6 +705,24 @@ export default function FormModel({ modelId }: FormModelProps) {
           </Form>
         </CardContent>
       </Card>
+      
+      {/* 标签选择器 */}
+      {isEditMode && modelId ? (
+        <TagSelector
+          modelId={modelId}
+          open={isTagSelectorOpen}
+          onOpenChange={setIsTagSelectorOpen}
+        />
+      ) : (
+        // 新创建模式下的标签选择器
+        <TagSelector
+          modelId=""
+          open={isTagSelectorOpen}
+          onOpenChange={setIsTagSelectorOpen}
+          onTagsSelected={setTempTags}
+          initialSelectedTags={tempTags}
+        />
+      )}
     </div>
   );
 } 
