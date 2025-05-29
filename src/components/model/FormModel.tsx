@@ -61,6 +61,7 @@ export default function FormModel({ modelId }: FormModelProps) {
   } | null>(null);
   const [uploadedModelFile, setUploadedModelFile] = useState<{
     url: string;
+    path: string;
     format: string;
     size: number;
   } | null>(null);
@@ -90,10 +91,12 @@ export default function FormModel({ modelId }: FormModelProps) {
   const handleModelUploadComplete = useCallback((files: any[]) => {
     if (files.length > 0) {
       const uploadedFile = files[0];
+      const uniquePath = generateUniqueFilePath(uploadedFile.name);
       const fileExt = uploadedFile.name.split(".").pop()?.toLowerCase() || "";
 
       setUploadedModelFile({
         url: uploadedFile.url,
+        path: uniquePath,
         format: fileExt,
         size: uploadedFile.size,
       });
@@ -219,8 +222,10 @@ export default function FormModel({ modelId }: FormModelProps) {
         name: values.name,
         description: values.description || "",
         category: values.category || "",
-        thumbnail_path: uploadedThumbnail.url,
-        storage_path: uploadedModelFile.url,
+        thumbnail_url: uploadedThumbnail.url,
+        thumbnail_path: uploadedThumbnail.path,
+        storage_url: uploadedModelFile.url,
+        storage_path: uploadedModelFile.path,
         format: uploadedModelFile.format,
         file_size: uploadedModelFile.size,
       };
@@ -261,12 +266,12 @@ export default function FormModel({ modelId }: FormModelProps) {
 
       // 添加新的缩略图（如果有）
       if (uploadedThumbnail) {
-        updateData.thumbnail_path = uploadedThumbnail.url;
+        updateData.thumbnail_url = uploadedThumbnail.url;
       }
 
       // 如果有上传的模型文件
       if (uploadedModelFile) {
-        updateData.storage_path = uploadedModelFile.url;
+        updateData.storage_url = uploadedModelFile.url;
         updateData.format = uploadedModelFile.format;
         updateData.file_size = uploadedModelFile.size;
       }

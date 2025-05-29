@@ -50,8 +50,8 @@ export default function DrawerModelViewer({
   const [showEnvironmentSelector, setShowEnvironmentSelector] = useState(false);
   
   // 获取模型URL和格式
-  const modelUrl = model.storage_path || "/kitchen-transformed.glb";
-  const modelFormat = (model.format?.toLowerCase() || 'glb') as ModelFormat;
+  const modelUrl = model.storage_url;
+  const modelFormat = model.format as ModelFormat;
   
   // 处理模型加载错误
   const handleModelError = (error: Error) => {
@@ -105,7 +105,7 @@ export default function DrawerModelViewer({
               <span>{model.name}</span>
             </DrawerTitle>
             <DrawerDescription className="text-xs sm:text-sm">
-              {model.description || '3D模型预览'} - 作者: {model.author}
+              {model.description || '3D模型预览'} - 作者: {model.user_id}
             </DrawerDescription>
           </DrawerHeader>
           
@@ -181,7 +181,7 @@ export default function DrawerModelViewer({
               <Button 
                 variant="outline"
                 onClick={() => {
-                  download(model.storage_path, `${model.name}.${model.format}`);
+                  download(model.storage_url, `${model.name}.${modelFormat}`);
                 }}
                 size="sm"
                 className="text-xs sm:text-sm px-2 py-1 h-auto sm:h-9 text-blue-600 dark:text-blue-400 border-blue-200 dark:border-blue-800 hover:bg-blue-50 dark:hover:bg-blue-950"
@@ -193,7 +193,7 @@ export default function DrawerModelViewer({
             
             <div className="flex justify-between w-full items-center mt-2">
               <span className="text-xs text-gray-500">
-                模型格式: {model.format.toUpperCase()} | 
+                模型格式: {modelFormat.toUpperCase()} | 
                 场景: {environmentPresets.find(p => p.value === environment)?.label || "城市"}
               </span>
             </div>

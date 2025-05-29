@@ -15,9 +15,10 @@ import { useRouter } from "next/navigation";
 interface CardModelProps {
   model: Model;
   showEditButton?: boolean;
+  userName?: string;
 }
 
-export default function CardModel({ model, showEditButton = false }: CardModelProps) {
+export default function CardModel({ model, showEditButton = false, userName }: CardModelProps) {
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const router = useRouter();
@@ -45,7 +46,7 @@ export default function CardModel({ model, showEditButton = false }: CardModelPr
       >
         <div className="relative w-full aspect-square sm:aspect-[4/3] md:aspect-[3/2]">
           <Image
-            src={model.thumbnail_path}
+            src={model.thumbnail_url}
             alt={model.name}
             fill
             className="object-cover"
@@ -105,7 +106,7 @@ export default function CardModel({ model, showEditButton = false }: CardModelPr
         </div>
         <div className="p-3 sm:p-4">
           <h3 className="text-base sm:text-lg font-semibold truncate">{model.name}</h3>
-          <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 mt-1 truncate">作者: {model.author}</p>
+          <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 mt-1 truncate">作者: {userName || model.user_id}</p>
           <div className="flex justify-between mt-2 text-xs text-gray-500 dark:text-gray-400">
             <span className="px-1.5 py-0.5 bg-gray-100 dark:bg-gray-800 rounded text-xs">
               {model.format.toUpperCase()}

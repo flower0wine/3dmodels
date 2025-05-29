@@ -6,14 +6,15 @@ export const modelSchema = z.object({
   name: z.string(),
   description: z.string().optional(),
   thumbnail_path: z.string().url(),
+  thumbnail_url: z.string().url(),
   storage_path: z.string().url(),
+  storage_url: z.string().url(),
   category: z.string().optional(),
   created_at: z.string().or(z.date()),
   updated_at: z.string().or(z.date()),
-  author: z.string().optional(),
+  user_id: z.string().uuid(),
   format: z.string(),
-  polygon_count: z.number().optional(),
-  file_size: z.number().optional()
+  file_size: z.number()
 }).passthrough();
 
 // 响应验证schema

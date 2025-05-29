@@ -35,7 +35,7 @@ export async function getModels(
     if (!userData.user) {
       throw new Error("未登录，请先登录");
     }
-    query = query.eq("author", userData.user.id);
+    query = query.eq("user_id", userData.user.id);
   }
   
   // 添加分页
@@ -80,33 +80,6 @@ export async function getModelById(id: string): Promise<Model | null> {
 }
 
 /**
- * 获取模型文件的URL
- * @param storagePath 存储路径
- * @returns 文件的公共URL
- */
-export async function getModelFileUrl(storagePath: string): Promise<{ url: string }> {
-  const supabase = await createClient();
-  
-  // 从存储路径中提取存储桶和文件路径
-  // 假设存储路径格式为 'models/file.glb'
-  const pathParts = storagePath.split('/');
-  const bucket = pathParts[0] || 'models'; // 默认使用models桶
-  const filePath = pathParts.slice(1).join('/');
-  
-  const { data, error } = await supabase
-    .storage
-    .from(bucket)
-    .createSignedUrl(filePath, 60 * 60); // 1小时有效期
-  
-  if (error) {
-    console.error("获取模型文件URL失败:", error);
-    throw new Error("无法获取模型文件URL");
-  }
-  
-  return { url: data.signedUrl };
-}
-
-/**
  * 上传模型
  * @param modelData 模型数据
  * @param file 模型文件
@@ -129,7 +102,7 @@ export async function uploadModel(
   // 上传模型文件
   const fileExt = file.name.split('.').pop();
   const fileName = `${Date.now()}_${Math.random().toString(36).substring(2, 15)}.${fileExt}`;
-  const filePath = `models/${fileName}`;
+  const filePath = `${fileName}`;
   
   const { error: fileUploadError } = await supabase
     .storage
@@ -174,9 +147,11 @@ export async function uploadModel(
   // 准备模型数据
   const newModel: Partial<Model> = {
     ...modelData,
-    author: userData.user.id,
-    storage_path: fileUrlData.publicUrl,
-    thumbnail_path: thumbUrlData.publicUrl,
+    user_id: userData.user.id,
+    storage_path: filePath,             // 存储路径
+    storage_url: fileUrlData.publicUrl, // 访问URL
+    thumbnail_path: thumbPath,          // 缩略图存储路径
+    thumbnail_url: thumbUrlData.publicUrl, // 缩略图访问URL
     format: fileExt || '',
     file_size: file.size,
     created_at: new Date().toISOString(),
@@ -203,7 +178,7 @@ export async function uploadModel(
  * @param id 模型ID
  * @returns 是否删除成功
  */
-export async function deleteModel(id: string): Promise<boolean> {
+export async function deleteModel(id: string): Promise<void> {
   const supabase = await createClient();
   
   // 获取当前用户
@@ -225,21 +200,34 @@ export async function deleteModel(id: string): Promise<boolean> {
   }
   
   // 检查是否为作者
-  if (model.author !== userData.user.id) {
+  if (model.user_id !== userData.user.id) {
     throw new Error("无权删除此模型");
   }
   
   // 从存储中删除文件
-  // 从storage_path和thumbnail_path中提取路径
-  const storagePath = model.storage_path.split('/').pop() || '';
-  const thumbnailPath = model.thumbnail_path.split('/').pop() || '';
+  // 直接使用存储路径删除文件，而不是从URL提取
+  console.log(model);
   
-  if (storagePath) {
-    await supabase.storage.from('models').remove([storagePath]);
+  // 删除模型文件
+  if (model.storage_path) {
+    console.log("删除模型文件:", model.storage_path);
+    
+    const { error: deleteError } = await supabase.storage.from('models').remove([model.storage_path]);
+    if (deleteError) {
+      console.error("删除模型文件失败:", deleteError);
+      throw new Error("删除模型文件失败");
+    }
   }
   
-  if (thumbnailPath) {
-    await supabase.storage.from('thumbnails').remove([thumbnailPath]);
+  // 删除缩略图
+  if (model.thumbnail_path) {
+    console.log("删除缩略图:", model.thumbnail_path);
+    
+    const { error: deleteError } = await supabase.storage.from('thumbnails').remove([model.thumbnail_path]);
+    if (deleteError) {
+      console.error("删除缩略图失败:", deleteError);
+      throw new Error("删除缩略图失败");
+    }
   }
   
   // 从数据库中删除
@@ -252,8 +240,6 @@ export async function deleteModel(id: string): Promise<boolean> {
     console.error("删除模型失败:", deleteError);
     throw new Error("删除模型失败");
   }
-  
-  return true;
 }
 
 /**
@@ -287,7 +273,7 @@ export async function updateModel(
   }
   
   // 检查是否为作者
-  if (model.author !== userData.user.id) {
+  if (model.user_id !== userData.user.id) {
     throw new Error("无权更新此模型");
   }
   
@@ -296,6 +282,30 @@ export async function updateModel(
     ...updateData,
     updated_at: new Date().toISOString()
   };
+
+  // 如果有更新存储路径，则同时更新URL
+  if (updateData.storage_path && !updateData.storage_url) {
+    const { data: fileUrlData } = await supabase
+      .storage
+      .from('models')
+      .getPublicUrl(updateData.storage_path);
+    
+    if (fileUrlData) {
+      updatedData.storage_url = fileUrlData.publicUrl;
+    }
+  }
+
+  // 如果有更新缩略图路径，则同时更新URL
+  if (updateData.thumbnail_path && !updateData.thumbnail_url) {
+    const { data: thumbUrlData } = await supabase
+      .storage
+      .from('thumbnails')
+      .getPublicUrl(updateData.thumbnail_path);
+    
+    if (thumbUrlData) {
+      updatedData.thumbnail_url = thumbUrlData.publicUrl;
+    }
+  }
   
   // 更新数据库
   const { data: updatedModels, error: updateError } = await supabase
@@ -320,7 +330,6 @@ export async function updateModel(
  */
 export async function createModel(
   modelData: Partial<Model>,
-  thumbnailFile?: File
 ): Promise<Model> {
   const supabase = await createClient();
   
@@ -331,47 +340,30 @@ export async function createModel(
   }
   
   try {
-    let thumbnailUrl = modelData.thumbnail_path;
-    
-    // 如果提供了缩略图文件且没有缩略图URL，则上传缩略图
-    if (thumbnailFile && !thumbnailUrl) {
-      // 上传缩略图
-      const thumbExt = thumbnailFile.name.split('.').pop();
-      const thumbName = `${Date.now()}_${Math.random().toString(36).substring(2, 15)}.${thumbExt}`;
-      const thumbPath = `${thumbName}`;
-      
-      const { error: thumbUploadError } = await supabase
-        .storage
-        .from('thumbnails')
-        .upload(thumbPath, thumbnailFile);
-      
-      if (thumbUploadError) {
-        console.error("上传缩略图失败:", thumbUploadError);
-        throw new Error("上传缩略图失败");
-      }
-      
-      // 获取缩略图公共URL
-      const { data: thumbUrlData } = await supabase
-        .storage
-        .from('thumbnails')
-        .getPublicUrl(thumbPath);
-      
-      if (!thumbUrlData) {
-        throw new Error("获取缩略图URL失败");
-      }
-      
-      thumbnailUrl = thumbUrlData.publicUrl;
+    // 确保有缩略图URL
+    if (!modelData.thumbnail_url) {
+      throw new Error("缺少缩略图URL，请上传缩略图");
     }
     
-    if (!thumbnailUrl) {
-      throw new Error("缺少缩略图，请上传缩略图");
+    // 确保有缩略图路径
+    if (!modelData.thumbnail_path) {
+      throw new Error("缺少缩略图路径，请上传缩略图");
+    }
+    
+    // 确保有模型文件URL
+    if (!modelData.storage_url) {
+      throw new Error("缺少模型文件URL，请上传模型文件");
+    }
+    
+    // 确保有模型文件路径
+    if (!modelData.storage_path) {
+      throw new Error("缺少模型文件路径，请上传模型文件");
     }
     
     // 准备完整的模型数据
     const newModel: Partial<Model> = {
       ...modelData,
-      author: userData.user.id,
-      thumbnail_path: thumbnailUrl,
+      user_id: userData.user.id,
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
     };
@@ -419,7 +411,7 @@ export async function getUserModels(
   let query = supabase
     .from("models")
     .select("*")
-    .eq("author", userData.user.id)
+    .eq("user_id", userData.user.id)
     .order("created_at", { ascending: false });
   
   // 如果有搜索关键词，添加搜索条件

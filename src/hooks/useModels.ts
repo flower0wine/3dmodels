@@ -3,7 +3,6 @@ import { ModelsResponse } from "@/types/model";
 import {
   getModels,
   getModelById,
-  getModelFileUrl,
 } from "@/lib/supabase/models";
 
 // 获取模型列表的Hooks
@@ -29,13 +28,3 @@ export function useModel(id: string) {
     staleTime: 1000 * 60 * 10, // 10分钟
   });
 }
-
-// 获取模型文件URL的Hooks
-export function useModelFileUrl(key: string | null) {
-  return useQuery({
-    queryKey: ["modelFileUrl", key],
-    queryFn: () => getModelFileUrl(key!),
-    enabled: !!key,
-    staleTime: 1000 * 60 * 60, // 1小时
-  });
-} 
