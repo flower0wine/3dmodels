@@ -161,8 +161,6 @@ export async function createTag(tagData: TagInput): Promise<Tag> {
     updated_at: new Date().toISOString()
   };
 
-  console.log(newTag);
-  
   // 插入数据库
   const { data: insertedTag, error: insertError } = await supabase
     .from('tags')

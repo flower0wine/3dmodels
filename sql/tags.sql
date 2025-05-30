@@ -57,13 +57,13 @@ ALTER TABLE tags ENABLE ROW LEVEL SECURITY;
 -- 创建标签访问策略
 CREATE POLICY "标签可以被任何用户查看"
 ON tags FOR SELECT
-TO anon
+TO anon, authenticated
 USING (true);
 
 CREATE POLICY "用户可以创建自己的标签"
 ON tags FOR INSERT
 TO authenticated
-WITH CHECK (auth.uid() = user_id);
+WITH CHECK (true);
 
 CREATE POLICY "用户只能更新自己的标签"
 ON tags FOR UPDATE
@@ -82,7 +82,7 @@ ALTER TABLE model_tags ENABLE ROW LEVEL SECURITY;
 -- 创建模型标签关联的访问策略
 CREATE POLICY "模型标签关联可以被任何用户查看"
 ON model_tags FOR SELECT
-TO anon
+TO anon, authenticated
 USING (true);
 
 CREATE POLICY "用户可以为自己的模型添加标签"
@@ -90,7 +90,7 @@ ON model_tags FOR INSERT
 TO authenticated
 WITH CHECK (EXISTS (
   SELECT 1 FROM models
-  WHERE id = model_id AND user_id = auth.uid()
+  WHERE id = model_id
 ));
 
 CREATE POLICY "用户只能删除自己模型的标签关联"

@@ -57,13 +57,13 @@ ALTER TABLE models ENABLE ROW LEVEL SECURITY;
 -- 创建存储桶策略
 CREATE POLICY "模型可以被任何已认证用户查看"
 ON models FOR SELECT
-TO authenticated
+TO anon, authenticated
 USING (true);
 
 CREATE POLICY "用户可以插入自己的模型"
 ON models FOR INSERT
 TO authenticated
-WITH CHECK (auth.uid() = user_id);
+WITH CHECK (true);
 
 CREATE POLICY "用户只能更新自己的模型"
 ON models FOR UPDATE
