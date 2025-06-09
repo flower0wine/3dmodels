@@ -16,14 +16,14 @@ import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { UppyFileUploader } from "@/components/upload/UppyFileUploader";
-import { TagSelector } from "@/components/tag/TagSelector";
-import { TagGroup } from "@/components/tag/TagGroup";
+import { InlineTagInput } from "@/components/tag/TagInput";
 import { useModelTags } from "@/hooks/useModelTags";
-import { Trash2, UploadCloud, Save, XCircle, FileEdit, Tag } from "lucide-react";
+import { Trash2, UploadCloud, Save, XCircle, FileEdit } from "lucide-react";
 import { uploadFile } from "@/lib/supabase/storage";
 import { updateModel, deleteModel, createModel } from "@/lib/supabase/models";
 import { updateModelTags } from "@/lib/supabase/model-tags";
 import { generateUniqueFilePath } from "@/lib/utils";
+import { Tag } from "@/types/tag";
 
 // 表单验证schema
 const modelFormSchema = z.object({
@@ -44,14 +44,11 @@ export default function FormModel({ modelId }: FormModelProps) {
   // 获取模型数据(编辑模式)
   const { data: model, isLoading, error } = useModel(modelId || "");
   
-  // 标签选择器状态
-  const [isTagSelectorOpen, setIsTagSelectorOpen] = useState(false);
-  
   // 获取模型标签(编辑模式)
-  const { tags: modelTags, isLoading: isTagsLoading } = useModelTags(modelId || "");
+  const { tags: modelTags, isLoading: isTagsLoading, updateTags } = useModelTags(modelId || "");
   
   // 新创建模型的临时标签列表
-  const [tempTags, setTempTags] = useState<string[]>([]);
+  const [tempTags, setTempTags] = useState<Tag[]>([]);
 
   // 文件上传状态
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -207,6 +204,17 @@ export default function FormModel({ modelId }: FormModelProps) {
     }
   };
 
+  // 处理标签变更
+  const handleTagsChange = (newTags: Tag[]) => {
+    if (isEditMode && modelId) {
+      // 编辑模式：更新已有模型的标签
+      updateTags(newTags.map(tag => tag.id));
+    } else {
+      // 创建模式：保存临时标签列表
+      setTempTags(newTags);
+    }
+  };
+
   // 处理创建模型
   const handleCreateModel = async (values: ModelFormValues) => {
     // 校验必需的文件是否已上传
@@ -244,7 +252,7 @@ export default function FormModel({ modelId }: FormModelProps) {
       // 如果有临时标签，为新创建的模型添加标签
       if (tempTags.length > 0 && createdModel?.id) {
         try {
-          await updateModelTags(createdModel.id, tempTags);
+          await updateModelTags(createdModel.id, tempTags.map(tag => tag.id));
         } catch (tagError) {
           console.error("添加标签失败:", tagError);
           toast.error("模型创建成功，但标签添加失败");
@@ -415,36 +423,26 @@ export default function FormModel({ modelId }: FormModelProps) {
                 <FormDescription>
                   为模型添加标签，方便分类和查找
                 </FormDescription>
-                <div className="space-y-3">
+                <div className="mt-2">
                   {isEditMode ? (
-                    // 编辑模式下显示已有标签
-                    <div className="mb-2">
-                      {isTagsLoading ? (
-                        <div className="text-sm text-muted-foreground">加载标签中...</div>
-                      ) : (
-                        <TagGroup 
-                          tags={modelTags} 
-                          emptyText="暂无标签"
-                        />
-                      )}
-                    </div>
-                  ) : tempTags.length > 0 ? (
-                    // 创建模式下显示临时选择的标签ID列表
-                    <div className="mb-2 text-sm text-muted-foreground">
-                      已选择 {tempTags.length} 个标签
-                    </div>
-                  ) : null}
-                  
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    className="flex items-center gap-1"
-                    onClick={() => setIsTagSelectorOpen(true)}
-                  >
-                    <Tag className="h-4 w-4" />
-                    {isEditMode ? "管理标签" : "添加标签"}
-                  </Button>
+                    // 编辑模式：直接编辑模型标签
+                    isTagsLoading ? (
+                      <div className="text-sm text-muted-foreground">加载标签中...</div>
+                    ) : (
+                      <InlineTagInput 
+                        modelTags={modelTags}
+                        onTagsChange={handleTagsChange}
+                        placeholder="输入标签名称并按回车添加"
+                      />
+                    )
+                  ) : (
+                    // 创建模式：使用临时标签列表
+                    <InlineTagInput 
+                      modelTags={tempTags}
+                      onTagsChange={handleTagsChange}
+                      placeholder="输入标签名称并按回车添加"
+                    />
+                  )}
                 </div>
               </div>
 
@@ -705,24 +703,6 @@ export default function FormModel({ modelId }: FormModelProps) {
           </Form>
         </CardContent>
       </Card>
-      
-      {/* 标签选择器 */}
-      {isEditMode && modelId ? (
-        <TagSelector
-          modelId={modelId}
-          open={isTagSelectorOpen}
-          onOpenChange={setIsTagSelectorOpen}
-        />
-      ) : (
-        // 新创建模式下的标签选择器
-        <TagSelector
-          modelId=""
-          open={isTagSelectorOpen}
-          onOpenChange={setIsTagSelectorOpen}
-          onTagsSelected={setTempTags}
-          initialSelectedTags={tempTags}
-        />
-      )}
     </div>
   );
 } 

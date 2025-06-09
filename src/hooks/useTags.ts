@@ -55,9 +55,6 @@ export function useTags(userOnly: boolean = false, searchQuery: string = "") {
       toast.success("标签创建成功");
       queryClient.invalidateQueries({ queryKey: ["tags"] });
     },
-    onError: (error: Error) => {
-      toast.error(`创建标签失败: ${error.message}`);
-    }
   });
   
   // 更新标签
@@ -66,12 +63,8 @@ export function useTags(userOnly: boolean = false, searchQuery: string = "") {
       return await updateTag(id, tag);
     },
     onSuccess: () => {
-      toast.success("标签更新成功");
       queryClient.invalidateQueries({ queryKey: ["tags"] });
     },
-    onError: (error: Error) => {
-      toast.error(`更新标签失败: ${error.message}`);
-    }
   });
   
   // 删除标签
@@ -80,29 +73,25 @@ export function useTags(userOnly: boolean = false, searchQuery: string = "") {
       return await deleteTag(id);
     },
     onSuccess: () => {
-      toast.success("标签删除成功");
-      queryClient.invalidateQueries({ queryKey: ["tags"] });
       // 同时清除和标签相关的模型缓存
+      queryClient.invalidateQueries({ queryKey: ["tags"] });
       queryClient.invalidateQueries({ queryKey: ["model-tags"] });
     },
-    onError: (error: Error) => {
-      toast.error(`删除标签失败: ${error.message}`);
-    }
   });
   
   // 处理标签创建
   const handleCreateTag = useCallback(async (tagData: TagInput) => {
-    createTagMutation.mutate(tagData);
+    return createTagMutation.mutateAsync(tagData);
   }, [createTagMutation]);
   
   // 处理标签更新
   const handleUpdateTag = useCallback(async (id: string, tagData: TagInput) => {
-    updateTagMutation.mutate({ id, tag: tagData });
+    return updateTagMutation.mutateAsync({ id, tag: tagData });
   }, [updateTagMutation]);
   
   // 处理标签删除
   const handleDeleteTag = useCallback(async (id: string) => {
-    deleteTagMutation.mutate(id);
+    return deleteTagMutation.mutateAsync(id);
   }, [deleteTagMutation]);
   
   return {
